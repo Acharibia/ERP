@@ -1,4 +1,5 @@
-import AppLayoutTemplate from '@/layouts/app/app-sidebar-layout';
+//@/layouts/app-layout.tsx
+import AppLayoutTemplate from '@/layouts/app/admin-layout';
 import { type BreadcrumbItem } from '@/types';
 import { type ReactNode } from 'react';
 

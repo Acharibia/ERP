@@ -1,18 +1,22 @@
-//@/layouts/app/app-sidebar-layout
+import { AdminSidebar } from '@/components/admin-sidebar';
 import { AppContent } from '@/components/app-content';
 import { AppShell } from '@/components/app-shell';
-import { AppSidebar } from '@/components/app-sidebar';
 import { AppSidebarHeader } from '@/components/app-sidebar-header';
 import { type BreadcrumbItem } from '@/types';
-import { type PropsWithChildren } from 'react';
+import { type ReactNode } from 'react';
 
-export default function AppSidebarLayout({ children, breadcrumbs = [] }: PropsWithChildren<{ breadcrumbs?: BreadcrumbItem[] }>) {
+interface AdminLayoutProps {
+    children: ReactNode;
+    breadcrumbs?: BreadcrumbItem[];
+}
+
+export default function AdminLayout({ children, breadcrumbs = [] }: AdminLayoutProps) {
     return (
         <AppShell variant="sidebar">
-            <AppSidebar />
+            <AdminSidebar />
             <AppContent variant="sidebar">
                 <AppSidebarHeader breadcrumbs={breadcrumbs} />
-                {children}
+                <main className="flex-1 p-4 md:p-6">{children}</main>
             </AppContent>
         </AppShell>
     );

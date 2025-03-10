@@ -38,5 +38,41 @@ export interface User {
     email_verified_at: string | null;
     created_at: string;
     updated_at: string;
-    [key: string]: unknown; // This allows for additional properties...
+    user_type?: 'system_admin' | 'reseller' | 'business_user';
+    [key: string]: unknown; // This allows for additional properties
+}
+
+// Business entity type
+export interface Business {
+    id: number;
+    tenant_id: string;
+    name: string;
+    reseller_id: number;
+    subscription_status: 'active' | 'trial' | 'suspended' | 'cancelled';
+    environment?: 'production' | 'staging' | 'development';
+    created_at?: string;
+    updated_at?: string;
+    [key: string]: unknown; // Allow for additional properties
+}
+
+// Module entity type
+export interface Module {
+    id: number;
+    name: string;
+    code: string;
+    description?: string;
+    version?: string;
+    is_core?: boolean;
+    status?: 'active' | 'inactive' | 'deprecated';
+    icon_url?: string;
+    created_at?: string;
+    updated_at?: string;
+    [key: string]: unknown; // Allow for additional properties
+}
+
+// Page props interface for AppSidebarHeader
+export interface PageProps extends SharedData {
+    currentBusiness?: Business | null;
+    userBusinesses?: Business[];
+    availableModules?: Module[];
 }

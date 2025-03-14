@@ -24,7 +24,7 @@ export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: Breadcrum
     return (
         <div>
             {/* Main Header */}
-            <header className="border-sidebar-border/50 flex h-14 shrink-0 items-center gap-2 border-b px-4 transition-[width,height] ease-linear">
+            <header className="border-sidebar-border/50 sticky flex h-14 shrink-0 items-center gap-2 border-b px-4 transition-[width,height] ease-linear">
                 <div className="flex w-full items-center justify-between">
                     <div className="flex items-center gap-2">
                         <SidebarTrigger className="-ml-1" />

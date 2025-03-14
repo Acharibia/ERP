@@ -1,3 +1,4 @@
+// @/types/index.ts
 import { LucideIcon } from 'lucide-react';
 import type { Config } from 'ziggy-js';
 
@@ -27,6 +28,10 @@ export interface SharedData {
     quote: { message: string; author: string };
     auth: Auth;
     ziggy: Config & { location: string };
+    // Add the session variables we need for layout switching
+    activeAccessType?: 'admin' | 'reseller' | 'module' | null;
+    activeModuleCode?: string | null;
+    activeBusinessId?: number | null;
     [key: string]: unknown;
 }
 
@@ -70,7 +75,6 @@ export interface Module {
     [key: string]: unknown; // Allow for additional properties
 }
 
-// Page props interface for AppSidebarHeader
 export interface PageProps extends SharedData {
     currentBusiness?: Business | null;
     userBusinesses?: Business[];

@@ -74,7 +74,7 @@ export function AdminSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <NavMain items={mainNavItems} groupLabel="Administration" />
+                <NavMain items={mainNavItems} groupLabel="System Administration" />
             </SidebarContent>
 
             <SidebarFooter>

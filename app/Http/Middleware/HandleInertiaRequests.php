@@ -46,7 +46,11 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
-            'ziggy' => fn (): array => [
+            // Share the active access type and module code with all pages
+            'activeAccessType' => $request->session()->get('active_access_type'),
+            'activeModuleCode' => $request->session()->get('active_module_code'),
+            'activeBusinessId' => $request->session()->get('active_business_id'),
+            'ziggy' => fn(): array => [
                 ...(new Ziggy)->toArray(),
                 'location' => $request->url(),
             ]

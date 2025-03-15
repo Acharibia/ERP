@@ -2,8 +2,8 @@
 
 namespace App\Admin\Http\Controllers;
 
-use App\Admin\Requests\ResellerStoreRequest;
-use App\Admin\Requests\ResellerUpdateRequest;
+use App\Admin\Http\Requests\ResellerStoreRequest;
+use App\Admin\Http\Requests\ResellerUpdateRequest;
 use App\Admin\Services\ResellerService;
 use App\Http\Controllers\Controller;
 use App\Models\Shared\Reseller;
@@ -44,7 +44,7 @@ class ResellerController extends Controller
     /**
      * Store a newly created reseller in storage.
      *
-     * @param  \App\Admin\Requests\ResellerStoreRequest  $request
+     * @param  \App\Admin\Http\Requests\ResellerStoreRequest  $request
      * @return \Illuminate\Http\RedirectResponse
      */
     public function store(ResellerStoreRequest $request)
@@ -107,7 +107,7 @@ class ResellerController extends Controller
     /**
      * Update the specified reseller in storage.
      *
-     * @param  \App\Admin\Requests\ResellerUpdateRequest  $request
+     * @param  \App\Admin\Http\Requests\ResellerUpdateRequest  $request
      * @param \App\Models\Shared\Reseller $reseller
      * @return \Illuminate\Http\RedirectResponse
      */

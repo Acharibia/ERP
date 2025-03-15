@@ -17,7 +17,11 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 
-const ModuleAdoptionChart = ({ className }) => {
+interface ModuleAdoptionChartProps {
+  className?: string;
+}
+
+const ModuleAdoptionChart = ({ className }: ModuleAdoptionChartProps) => {
   // Sample data for module adoption
   const data = [
     { module: 'HR Management', adoption: 87, fullMark: 100 },

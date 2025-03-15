@@ -23,12 +23,15 @@ import SubscriptionDistributionChart from '@/components/admin/subscription-distr
 // Import charts for Modules tab
 import ModuleUserEngagementChart from '@/components/admin/module-user-engagement-chart';
 import ModuleUsageTrendChart from '@/components/admin/modules-usage-trend-chart';
+import ModuleRevenueContributionChart from '@/components/admin/module-revenue-contribution-chart';
+import ModuleImplementationSuccessChart from '@/components/admin/module-implementation-success-rate-chart';
 
 const breadcrumbs = [
     {
         title: 'Dashboard',
         href: '/dashboard',
     },
+    
 ];
 
 export default function Dashboard() {
@@ -295,6 +298,8 @@ export default function Dashboard() {
                         <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-12">
                             <ModuleUsageTrendChart className='col-span-6' />
                             <ModuleUserEngagementChart className="col-span-12 lg:col-span-6" />
+                            <ModuleRevenueContributionChart className="col-span-12 lg:col-span-6" />
+                            <ModuleImplementationSuccessChart className="col-span-12 lg:col-span-6" />
                         </div>
 
                     </TabsContent>

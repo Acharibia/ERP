@@ -13,7 +13,7 @@ import {
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { type BreadcrumbItem, type Business, type Module, type PageProps } from '@/types';
 import { usePage } from '@inertiajs/react';
-import { BarChart2, Bell, Building2, Grid, Package, Search, ShieldCheck, Users } from 'lucide-react';
+import { BarChart2, Bell, Building2, Grid, LayoutGrid, Package, Search, ShieldCheck, Users } from 'lucide-react';
 import { NavUser } from './nav-user';
 
 export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: BreadcrumbItem[] }) {
@@ -22,10 +22,10 @@ export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: Breadcrum
     const user = auth.user;
 
     return (
-        <div>
+        <div className="bg-background/80 sticky top-0 z-50 backdrop-blur-sm">
             {/* Main Header */}
-            <header className="border-sidebar-border/50 sticky flex h-14 shrink-0 items-center gap-2 border-b px-4 transition-[width,height] ease-linear">
-                <div className="flex w-full items-center justify-between">
+            <header className="border-sidebar-border/50 flex h-14 shrink-0 items-center gap-2 border-b px-4 transition-[width,height] ease-linear">
+                <div className="flex w-full items-center justify-between px-6">
                     <div className="flex items-center gap-2">
                         <SidebarTrigger className="-ml-1" />
 
@@ -34,8 +34,8 @@ export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: Breadcrum
                             <NavigationMenuList>
                                 <NavigationMenuItem>
                                     <NavigationMenuTrigger>
-                                        <Grid className="mr-2 h-4 w-4" />
-                                        Portals
+                                        <LayoutGrid className="mr-2 h-4 w-4" />
+                                        Apps
                                     </NavigationMenuTrigger>
                                     <NavigationMenuContent>
                                         <ul className="grid gap-3 p-4 md:w-[400px] lg:w-[500px]">
@@ -339,7 +339,6 @@ export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: Breadcrum
                     </div>
                 </div>
             </header>
-
             {/* Breadcrumbs below header */}
             <div className="border-sidebar-border/50 bg-muted/20 flex border-b px-4 py-2">
                 <Breadcrumbs breadcrumbs={breadcrumbs} />

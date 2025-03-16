@@ -9,7 +9,6 @@ use Inertia\Inertia;
 class BusinessController extends Controller
 {
 
-
     /**
      * Display a listing of resellers.
      *
@@ -20,6 +19,4 @@ class BusinessController extends Controller
     {
         return Inertia::render('admin/businesses/index');
     }
-
-
 }

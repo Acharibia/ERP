@@ -18,7 +18,7 @@ class BusinessController extends Controller
      */
     public function index(Request $request)
     {
-        return Inertia::render('system-admin/businesses/index');
+        return Inertia::render('admin/businesses/index');
     }
 
 

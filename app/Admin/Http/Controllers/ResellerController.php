@@ -27,7 +27,7 @@ class ResellerController extends Controller
      */
     public function index(Request $request)
     {
-        return Inertia::render('admin/resellers/index');
+        return Inertia::render('system-admin/resellers/index');
     }
 
     /**

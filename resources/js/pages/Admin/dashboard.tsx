@@ -1,3 +1,4 @@
+//admin/dashboard.tsx
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,17 +22,16 @@ import ModuleAdoptionChart from '@/components/admin/module-adoption-chart';
 import SubscriptionDistributionChart from '@/components/admin/subscription-distribution-chart';
 
 // Import charts for Modules tab
+import ModuleImplementationSuccessChart from '@/components/admin/module-implementation-success-rate-chart';
+import ModuleRevenueContributionChart from '@/components/admin/module-revenue-contribution-chart';
 import ModuleUserEngagementChart from '@/components/admin/module-user-engagement-chart';
 import ModuleUsageTrendChart from '@/components/admin/modules-usage-trend-chart';
-import ModuleRevenueContributionChart from '@/components/admin/module-revenue-contribution-chart';
-import ModuleImplementationSuccessChart from '@/components/admin/module-implementation-success-rate-chart';
 
 const breadcrumbs = [
     {
         title: 'Dashboard',
         href: '/dashboard',
     },
-    
 ];
 
 export default function Dashboard() {
@@ -296,12 +296,11 @@ export default function Dashboard() {
 
                         {/* First row of module charts */}
                         <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-12">
-                            <ModuleUsageTrendChart className='col-span-6' />
+                            <ModuleUsageTrendChart className="col-span-6" />
                             <ModuleUserEngagementChart className="col-span-12 lg:col-span-6" />
                             <ModuleRevenueContributionChart className="col-span-12 lg:col-span-6" />
                             <ModuleImplementationSuccessChart className="col-span-12 lg:col-span-6" />
                         </div>
-
                     </TabsContent>
 
                     {/* Resellers Tab */}

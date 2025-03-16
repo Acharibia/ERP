@@ -6,7 +6,7 @@ import AppLayout from '@/layouts/app-layout';
 import { Head } from '@inertiajs/react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import resellersData from '../../../data/tasks.json';
+import resellersData from '@/data/tasks.json';
 
 const breadcrumbs = [
     {

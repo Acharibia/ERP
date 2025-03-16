@@ -6,21 +6,18 @@ import AppLayout from '@/layouts/app-layout';
 import { Head } from '@inertiajs/react';
 import { ArrowUpRight, BarChart3, Building, Clock, Package, Server, ShieldAlert, TrendingUp, Users } from 'lucide-react';
 
-// Import chart components
 import BusinessHealthChart from '@/components/admin/business-health-chart';
 import OverviewChart from '@/components/admin/overview-chart';
 import RecentSalesChart from '@/components/admin/recent-sales-chart';
 import RecentSubscriptionChart from '@/components/admin/recent-subscriptions-chart';
 import RecentTransactions from '@/components/admin/recent-transactions';
 
-// Import new business tab charts
 import BusinessGrowthChart from '@/components/admin/business-growth-chart';
 import BusinessRetentionChart from '@/components/admin/business-retention-chart';
 import IndustryDistributionChart from '@/components/admin/industry-distribution-chart';
 import ModuleAdoptionChart from '@/components/admin/module-adoption-chart';
 import SubscriptionDistributionChart from '@/components/admin/subscription-distribution-chart';
 
-// Import charts for Modules tab
 import ModuleImplementationSuccessChart from '@/components/admin/module-implementation-success-rate-chart';
 import ModuleRevenueContributionChart from '@/components/admin/module-revenue-contribution-chart';
 import ModuleUserEngagementChart from '@/components/admin/module-user-engagement-chart';

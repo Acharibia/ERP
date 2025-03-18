@@ -29,7 +29,6 @@ class Business extends Model
         'reseller_id',
         'subscription_status', // active, trial, suspended, cancelled
         'environment',         // production, staging, development
-        'schema_version',
         'notes',
     ];
 

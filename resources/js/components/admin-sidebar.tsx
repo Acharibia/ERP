@@ -4,7 +4,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { BarChart3, Building2, Cog, Database, Grid3X3, LayoutDashboard, Package, Users } from 'lucide-react';
+import { BarChart3, Blocks, Briefcase, Building2, Cog, Combine, Database, Grid3X3, Hand, Handshake, LayoutDashboard, Merge, Package, UserRoundCog, UserRoundSearch, Users } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -13,25 +13,46 @@ const mainNavItems: NavItem[] = [
         url: '/admin/dashboard',
         icon: LayoutDashboard,
     },
+
     {
-        title: 'Businesses',
-        url: '/admin/businesses',
-        icon: Building2,
+        title: 'Admins',
+        url: '/admin/resellers',
+        icon: UserRoundCog,
     },
     {
         title: 'Resellers',
         url: '/admin/resellers',
+        icon: UserRoundSearch,
+    },
+    {
+        title: 'Businesses',
+        url: '/admin/businesses',
+        icon: Briefcase,
+    },
+    {
+        title: 'Partnerships',
+        url: '/admin/partnerships',
+        icon: Handshake,
+    },
+    {
+        title: 'Investors',
+        url: '/admin/investors',
         icon: Users,
+    },
+    {
+        title: 'Business Mergers',
+        url: '/admin/mergers',
+        icon: Combine,
     },
     {
         title: 'Modules',
         url: '/admin/modules',
-        icon: Package,
+        icon: Blocks,
     },
     {
         title: 'Packages',
         url: '/admin/packages',
-        icon: Grid3X3,
+        icon: Package,
     },
     {
         title: 'System Settings',
@@ -74,7 +95,7 @@ export function AdminSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <NavMain items={mainNavItems} groupLabel="System Administration" />
+                <NavMain items={mainNavItems} groupLabel="Administration" />
             </SidebarContent>
 
             <SidebarFooter>

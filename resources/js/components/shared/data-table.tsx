@@ -58,7 +58,7 @@ export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData
         <div className="space-y-4">
             <DataTableToolbar table={table} />
             <div className="rounded-md border">
-                <Table>
+                <Table className='table-auto'>
                     <TableHeader>
                         {table.getHeaderGroups().map((headerGroup) => (
                             <TableRow key={headerGroup.id}>

@@ -37,7 +37,6 @@ class ResellerController extends Controller
      */
     public function create()
     {
-        // Return the create form
         return Inertia::render('admin/resellers/create');
     }
 
@@ -49,16 +48,8 @@ class ResellerController extends Controller
      */
     public function store(ResellerStoreRequest $request)
     {
-        // Create reseller using service
         $reseller = $this->resellerService->createReseller($request->validated());
 
-        // Flash notification for success
-        session()->flash('notification', [
-            'type' => 'success',
-            'message' => 'Reseller created successfully!'
-        ]);
-
-        // Redirect to the reseller's detail page
         return redirect()->route('admin.resellers.show', $reseller->id);
     }
 
@@ -70,7 +61,7 @@ class ResellerController extends Controller
      */
     public function show(Reseller $reseller)
     {
-        // Load relationships 
+        // Load relationships
         $reseller->load([
             'clients' => function ($query) {
                 $query->withCount('users')->latest()->take(5);

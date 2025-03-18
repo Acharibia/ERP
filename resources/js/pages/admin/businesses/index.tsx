@@ -2,11 +2,12 @@
 
 import { columns } from '@/components/shared/columns';
 import { DataTable } from '@/components/shared/data-table';
-import AppLayout from '@/layouts/app-layout';
-import { Head } from '@inertiajs/react';
-
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { buttonVariants } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import resellersData from '@/data/tasks.json';
+import AppLayout from '@/layouts/app-layout';
+import { Head, Link } from '@inertiajs/react';
+import { Plus } from 'lucide-react';
 
 const breadcrumbs = [
     {
@@ -19,15 +20,21 @@ const breadcrumbs = [
     },
 ];
 
-export default function Reseller() {
+export default function Businesses() {
     const tasks = resellersData;
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Businesses" />
             <Card>
-                <CardHeader>
-                    <CardTitle className="text-sm font-medium">Businesses</CardTitle>
+                <CardHeader className="flex flex-row items-center justify-between">
+                    <div>
+                        <CardTitle className="text-sm font-medium">Businesses</CardTitle>
+                        <CardDescription>Manage client businesses across your ERP platform</CardDescription>
+                    </div>
+                    <Link href={route('admin.businesses.create')} className={buttonVariants({ variant: 'default' })}>
+                        <Plus className="mr-2 h-4 w-4" /> Add Business
+                    </Link>
                 </CardHeader>
                 <CardContent>
                     <DataTable data={tasks} columns={columns} />

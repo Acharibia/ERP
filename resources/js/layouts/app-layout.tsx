@@ -1,4 +1,5 @@
 // @/layouts/app-layout.tsx
+import { Toaster } from '@/components/ui/sonner';
 import { type BreadcrumbItem, type PageProps } from '@/types';
 import { usePage } from '@inertiajs/react';
 import { type ReactNode } from 'react';
@@ -52,7 +53,9 @@ export default function AppLayout({ children, breadcrumbs, ...props }: AppLayout
 
     return (
         <LayoutComponent breadcrumbs={breadcrumbs} {...props}>
-            {children}
+            <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4"> {children}</div>
+
+            <Toaster />
         </LayoutComponent>
     );
 }

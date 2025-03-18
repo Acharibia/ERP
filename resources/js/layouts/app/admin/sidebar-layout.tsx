@@ -16,7 +16,7 @@ export default function AdminLayout({ children, breadcrumbs = [] }: AdminLayoutP
             <AdminSidebar />
             <AppContent variant="sidebar">
                 <AppSidebarHeader breadcrumbs={breadcrumbs} />
-                <main className="flex-1 p-4 md:p-6">{children}</main>
+                <main className="flex-1 p-6 md:p-6">{children}</main>
             </AppContent>
         </AppShell>
     );

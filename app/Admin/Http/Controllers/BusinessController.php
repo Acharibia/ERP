@@ -19,4 +19,14 @@ class BusinessController extends Controller
     {
         return Inertia::render('admin/businesses/index');
     }
+
+    /**
+     * Show the form for creating a new reseller.
+     *
+     * @return \Inertia\Response
+     */
+    public function create()
+    {
+        return Inertia::render('admin/businesses/create');
+    }
 }

@@ -2,9 +2,9 @@
 
 namespace Database\Seeders\Shared;
 
-use App\Models\Shared\Reseller;
-use App\Models\Shared\User;
-use App\Models\Shared\UserProfile;
+use App\Shared\Models\Reseller;
+use App\Shared\Models\User;
+use App\Shared\Models\UserProfile;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 

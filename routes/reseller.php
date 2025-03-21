@@ -1,6 +1,6 @@
 <?php
 
-use App\Reseller\Http\Controllers\DashboardController;
+use App\Resellers\Http\Controllers\DashboardController;
 
 Route::middleware(['auth', 'verify.reseller'])->prefix('reseller')->name('reseller.')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])

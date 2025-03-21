@@ -4,7 +4,7 @@ namespace Database\Seeders\Shared;
 
 use App\Models\Shared\Permission;
 use App\Models\Shared\Role;
-use App\Models\Shared\User;
+use App\Shared\Models\User;
 use Illuminate\Database\Seeder;
 
 class PermissionSeeder extends Seeder

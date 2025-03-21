@@ -1,20 +1,37 @@
 <?php
 
-use App\Http\Controllers\Auth\AuthenticatedSessionController;
-use App\Http\Controllers\Auth\ConfirmablePasswordController;
-use App\Http\Controllers\Auth\EmailVerificationNotificationController;
-use App\Http\Controllers\Auth\EmailVerificationPromptController;
-use App\Http\Controllers\Auth\NewPasswordController;
-use App\Http\Controllers\Auth\PasswordResetLinkController;
-use App\Http\Controllers\Auth\RegisteredUserController;
-use App\Http\Controllers\Auth\VerifyEmailController;
+use App\Auth\Http\Controllers\AuthenticatedSessionController;
+use App\Auth\Http\Controllers\ConfirmablePasswordController;
+use App\Auth\Http\Controllers\EmailVerificationNotificationController;
+use App\Auth\Http\Controllers\EmailVerificationPromptController;
+use App\Auth\Http\Controllers\NewPasswordController;
+use App\Auth\Http\Controllers\PasswordResetLinkController;
+use App\Auth\Http\Controllers\RegisteredUserController;
+use App\Auth\Http\Controllers\VerifyEmailController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
-    Route::get('register', [RegisteredUserController::class, 'create'])
+    // Type selection for registration
+    Route::get('register', [RegisteredUserController::class, 'showTypeSelection'])
         ->name('register');
 
-    Route::post('register', [RegisteredUserController::class, 'store']);
+    // Reseller registration routes
+    Route::get('register/reseller', [RegisteredUserController::class, 'createReseller'])
+        ->name('register.reseller');
+    Route::post('register/reseller', [RegisteredUserController::class, 'storeReseller'])
+        ->name('register.reseller.store');
+
+    // Business registration routes
+    Route::get('register/business', [RegisteredUserController::class, 'createBusiness'])
+        ->name('register.business');
+    Route::post('register/business', [RegisteredUserController::class, 'storeBusiness'])
+        ->name('register.business.store');
+
+    // Investor registration routes
+    Route::get('register/investor', [RegisteredUserController::class, 'createInvestor'])
+        ->name('register.investor');
+    Route::post('register/investor', [RegisteredUserController::class, 'storeInvestor'])
+        ->name('register.investor.store');
 
     Route::get('login', [AuthenticatedSessionController::class, 'create'])
         ->name('login');

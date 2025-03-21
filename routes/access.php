@@ -1,7 +1,7 @@
 <?php
 
-use App\Shared\Http\Controllers\AccessSelectionController;
-use App\Shared\Http\Controllers\BusinessSelectionController;
+use App\Shared\Http\Controllers\Access\AccessSelectionController;
+use App\Shared\Http\Controllers\Access\BusinessSelectionController;
 use Inertia\Inertia;
 
 Route::get('/select-business', [BusinessSelectionController::class, 'index'])

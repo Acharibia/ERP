@@ -4,7 +4,20 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { BarChart3, Blocks, Briefcase, Building2, Cog, Combine, Database, Grid3X3, Hand, Handshake, LayoutDashboard, Merge, Package, UserRoundCog, UserRoundSearch, Users } from 'lucide-react';
+import {
+    BarChart3,
+    Blocks,
+    Briefcase,
+    Cog,
+    Combine,
+    Database,
+    Handshake,
+    LayoutDashboard,
+    Package,
+    UserRoundCog,
+    UserRoundSearch,
+    Users,
+} from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [

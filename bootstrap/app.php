@@ -1,7 +1,7 @@
 <?php
 
-use App\Http\Middleware\HandleAppearance;
-use App\Http\Middleware\HandleInertiaRequests;
+use App\Shared\Http\Middleware\HandleAppearance;
+use App\Shared\Http\Middleware\HandleInertiaRequests;
 use App\Shared\Http\Middleware\EnsureActiveBusinessSelected;
 use App\Shared\Http\Middleware\VerifyAdminAccess;
 use App\Shared\Http\Middleware\VerifyModuleAccess;

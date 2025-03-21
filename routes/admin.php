@@ -1,8 +1,8 @@
 <?php
 
-use App\Admin\Http\Controllers\BusinessController;
-use App\Admin\Http\Controllers\ResellerController;
-use App\Admin\Http\Controllers\DashboardController;
+use App\Admins\Http\Controllers\BusinessController;
+use App\Admins\Http\Controllers\ResellerController;
+use App\Admins\Http\Controllers\DashboardController;
 
 Route::middleware(['auth', 'verify.admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])
@@ -14,3 +14,4 @@ Route::middleware(['auth', 'verify.admin'])->prefix('admin')->name('admin.')->gr
     // Business routes
     Route::resource('businesses', BusinessController::class);
 });
+    

@@ -6,10 +6,10 @@ use App\Models\Shared\Business;
 use App\Models\Shared\Industry;
 use App\Models\Shared\Module;
 use App\Models\Shared\Package;
-use App\Models\Shared\Reseller;
+use App\Shared\Models\Reseller;
 use App\Models\Shared\Subscription;
-use App\Models\Shared\User;
-use App\Models\Shared\UserProfile;
+use App\Shared\Models\User;
+use App\Shared\Models\UserProfile;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 

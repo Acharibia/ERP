@@ -2,7 +2,7 @@
 
 namespace App\Admins\Http\Controllers;
 
-use App\Shared\Http\Controllers\Controller;
+use App\Central\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;

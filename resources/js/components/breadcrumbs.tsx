@@ -16,7 +16,7 @@ export function Breadcrumbs({ breadcrumbs }: { breadcrumbs: BreadcrumbItemType[]
     } else if (activeAccessType === 'reseller') {
         contextBreadcrumbs.push({ title: 'Reseller', href: '/reseller/dashboard' });
     } else if (activeAccessType === 'module' && activeModuleCode) {
-        contextBreadcrumbs.push({ title: 'Business', href: '/business/dashboard' });
+        contextBreadcrumbs.push({ title: 'Modules', href: '/select-access' });
 
         // Add module-specific breadcrumb if applicable
         switch (activeModuleCode) {

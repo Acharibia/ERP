@@ -1,5 +1,6 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
+import { LucideIcon } from "lucide-react";
 
 /* ---------------------------------- Types ---------------------------------- */
 type StepState = "completed" | "active" | "inactive" | "disabled";
@@ -17,6 +18,7 @@ interface StepperContextValue {
 interface StepperItemContextValue {
   step: number;
   state: StepState;
+  icon?: LucideIcon; // Added icon to context
 }
 
 /* -------------------------------- Contexts -------------------------------- */
@@ -95,10 +97,12 @@ export function Stepper({
 interface StepperItemProps extends React.HTMLAttributes<HTMLDivElement> {
   step: number;
   children: React.ReactNode;
+  icon?: LucideIcon; // Added icon prop
 }
 
 export function StepperItem({
   step,
+  icon, // Added icon param
   children,
   className,
   ...props
@@ -115,8 +119,9 @@ export function StepperItem({
 
   const contextValue = React.useMemo(() => ({
     step,
-    state
-  }), [step, state]);
+    state,
+    icon // Pass icon to context
+  }), [step, state, icon]);
 
   return (
     <StepperItemContext.Provider value={contextValue}>
@@ -144,7 +149,7 @@ export function StepperSeparator({ className, ...props }: StepperSeparatorProps)
     return (
       <div
         className={cn(
-          "absolute h-0.5 -right-1/2 left-1/2 top-4.5 bg-muted",
+          "absolute h-0.5 -right-1/2 left-1/2 top-5 bg-muted",
           state === "completed" && "bg-primary",
           className
         )}
@@ -167,7 +172,7 @@ export function StepperTrigger({
   ...props
 }: StepperTriggerProps) {
   const { setActiveStep } = useStepper();
-  const { step, state } = useStepperItem();
+  const { step, state, icon: Icon } = useStepperItem(); // Get icon from context
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     onClick?.(e);
@@ -175,6 +180,21 @@ export function StepperTrigger({
       setActiveStep(step);
     }
   };
+
+  // If we have an icon and no children, render the icon
+  if (Icon && !children && !asChild) {
+    return (
+      <button
+        type="button"
+        onClick={handleClick}
+        className={cn(className)}
+        disabled={state === "disabled" || props.disabled}
+        {...props}
+      >
+        <Icon className="h-5 w-5" />
+      </button>
+    );
+  }
 
   if (asChild) {
     return React.Children.map(children, (child) => {
@@ -245,7 +265,7 @@ export function StepperDescription({ className, children, ...props }: StepperDes
 interface StepperIndicatorProps extends React.HTMLAttributes<HTMLDivElement> {}
 
 export function StepperIndicator({ className, children, ...props }: StepperIndicatorProps) {
-  const { state } = useStepperItem();
+  const { state, icon: Icon } = useStepperItem(); // Get icon from context
 
   return (
     <div
@@ -257,7 +277,8 @@ export function StepperIndicator({ className, children, ...props }: StepperIndic
       )}
       {...props}
     >
-      {children}
+      {/* Render the icon if provided, otherwise render children */}
+      {Icon ? <Icon className="h-5 w-5" /> : children}
     </div>
   );
 }

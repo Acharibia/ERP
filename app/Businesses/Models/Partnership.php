@@ -2,8 +2,8 @@
 
 namespace App\Businesses\Models;
 
-use App\Shared\Models\Business;
-use App\Shared\Models\User;
+use App\Central\Models\Business;
+use App\Central\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;

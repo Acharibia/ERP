@@ -2,7 +2,7 @@
 
 namespace App\Auth\Http\Controllers;
 
-use App\Shared\Http\Controllers\Controller;
+use App\Central\Http\Controllers\Controller;
 use App\Auth\Http\Requests\LoginRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -63,8 +63,10 @@ class AuthenticatedSessionController extends Controller
         } elseif ($businesses->count() === 1) {
             // If user has just one business, set it as the active business
             $business = $businesses->first();
-            $request->session()->put('active_business_id', $business->id);
-
+            $request->session()->put('active_business', $business);
+            if ($business->subscription) {
+                $request->session()->put('available_modules', $business->subscription->package->modules);
+            }
             // Redirect to the access selection page
             return redirect()->route('access.selection');
         } else {

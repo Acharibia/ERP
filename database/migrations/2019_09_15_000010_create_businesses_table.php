@@ -20,9 +20,9 @@ return new class extends Migration {
             $table->string('address_line_1')->nullable();
             $table->string('address_line_2')->nullable();
             $table->string('city')->nullable();
-            $table->string('state')->nullable();
+            $table->string('state_id')->nullable();
             $table->string('postal_code')->nullable();
-            $table->string('country')->nullable();
+            $table->string('country_id')->nullable();
             $table->foreignId('industry_id')->nullable()->constrained()->onDelete('set null');
             $table->foreignId('reseller_id')->nullable()->constrained()->onDelete('set null');
             $table->string('subscription_status')->default('ACTIVE'); // active, trial, suspended, cancelled

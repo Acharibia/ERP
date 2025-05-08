@@ -14,4 +14,3 @@ Route::middleware(['auth', 'verify.admin'])->prefix('admin')->name('admin.')->gr
     // Business routes
     Route::resource('businesses', BusinessController::class);
 });
-    

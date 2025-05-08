@@ -28,6 +28,9 @@ return [
 
     'env' => env('APP_ENV', 'production'),
 
+    'support_email' => env('SUPPORT_EMAIL', 'support@yourcompany.com'),
+
+
     /*
     |--------------------------------------------------------------------------
     | Application Debug Mode

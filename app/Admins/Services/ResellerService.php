@@ -2,8 +2,8 @@
 
 namespace App\Admins\Services;
 
-use App\Shared\Models\Reseller;
-use App\Shared\Models\User;
+use App\Central\Models\Reseller;
+use App\Central\Models\User;
 use Illuminate\Support\Facades\Hash;
 
 class ResellerService

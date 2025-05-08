@@ -2,26 +2,38 @@ import { Head, useForm } from '@inertiajs/react';
 import { CheckCheck, Circle, Dot, LoaderCircle } from 'lucide-react';
 import { FormEventHandler, useState } from 'react';
 
+import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { PasswordInput } from '@/components/ui/password-input';
 import { Stepper, StepperDescription, StepperItem, StepperSeparator, StepperTitle, StepperTrigger } from '@/components/ui/stepper';
 import { Textarea } from '@/components/ui/textarea';
 
+import { Combobox } from '@/components/ui/combobox';
+import { PhoneInput } from '@/components/ui/phone-input';
 import AuthLayout from '@/layouts/auth-layout';
 
 // Form type definition
 type ResellerRegisterForm = {
+    // Company Information
     company_name: string;
-    contact_name: string;
-    email: string;
-    phone: string;
+    company_email: string;
+    company_phone: string;
+
+    // Address
     address: string;
     city: string;
     state: string;
     postal_code: string;
     country: string;
+
+    // Admin Information
+    contact_name: string;
+    contact_email: string;
+    contact_phone: string;
+
+    // Security
     password: string;
     password_confirmation: string;
 };
@@ -40,8 +52,8 @@ const steps = [
     },
     {
         step: 3,
-        title: 'Account',
-        description: 'Administrator information',
+        title: 'Admin',
+        description: 'Administrator & security',
     },
 ];
 
@@ -64,15 +76,24 @@ export default function RegisterReseller() {
 
     // Initialize form with Inertia
     const { data, setData, post, processing, errors, reset } = useForm<ResellerRegisterForm>({
+        // Company Information
         company_name: '',
-        contact_name: '',
-        email: '',
-        phone: '',
+        company_email: '',
+        company_phone: '',
+
+        // Address
         address: '',
         city: '',
         state: '',
         postal_code: '',
         country: '',
+
+        // Admin Information
+        contact_name: '',
+        contact_email: '',
+        contact_phone: '',
+
+        // Security
         password: '',
         password_confirmation: '',
     });
@@ -94,13 +115,20 @@ export default function RegisterReseller() {
     const validateCurrentStep = (): boolean => {
         if (stepIndex === 1) {
             // Validate company information
-            return Boolean(data.company_name && data.contact_name && data.email);
+            return Boolean(data.company_name && data.company_email);
         } else if (stepIndex === 2) {
             // Validate address (just country is required)
             return Boolean(data.country);
         } else if (stepIndex === 3) {
-            // Validate password fields
-            return Boolean(data.password && data.password_confirmation && data.password.length >= 8 && data.password === data.password_confirmation);
+            // Validate admin information and password fields
+            return Boolean(
+                data.contact_name &&
+                    data.contact_email &&
+                    data.password &&
+                    data.password_confirmation &&
+                    data.password.length >= 8 &&
+                    data.password === data.password_confirmation,
+            );
         }
         return false;
     };
@@ -177,54 +205,38 @@ export default function RegisterReseller() {
                                             disabled={processing}
                                             placeholder="Your company name"
                                         />
-                                        {errors.company_name && <p className="text-destructive text-sm font-medium">{errors.company_name}</p>}
+                                        <InputError message={errors.company_name} />
                                     </div>
 
                                     <div className="space-y-1.5">
-                                        <Label htmlFor="contact_name">
-                                            Contact Name <span className="text-red-500">*</span>
+                                        <Label htmlFor="company_email">
+                                            Company Email <span className="text-red-500">*</span>
                                         </Label>
                                         <Input
-                                            id="contact_name"
-                                            type="text"
-                                            required
-                                            value={data.contact_name}
-                                            onChange={(e) => handleChange('contact_name', e.target.value)}
-                                            disabled={processing}
-                                            placeholder="Your full name"
-                                        />
-                                        {errors.contact_name && <p className="text-destructive text-sm font-medium">{errors.contact_name}</p>}
-                                    </div>
-
-                                    <div className="space-y-1.5">
-                                        <Label htmlFor="email">
-                                            Email Address <span className="text-red-500">*</span>
-                                        </Label>
-                                        <Input
-                                            id="email"
+                                            id="company_email"
                                             type="email"
                                             required
-                                            autoComplete="email"
-                                            value={data.email}
-                                            onChange={(e) => handleChange('email', e.target.value)}
+                                            value={data.company_email}
+                                            onChange={(e) => handleChange('company_email', e.target.value)}
                                             disabled={processing}
-                                            placeholder="email@example.com"
+                                            placeholder="company@example.com"
                                         />
-                                        {errors.email && <p className="text-destructive text-sm font-medium">{errors.email}</p>}
+                                        <InputError message={errors.company_email} />
                                     </div>
 
                                     <div className="space-y-1.5">
-                                        <Label htmlFor="phone">Phone Number</Label>
-                                        <Input
-                                            id="phone"
+                                        <Label htmlFor="company_phone">Company Phone</Label>
+                                        <PhoneInput
+                                            international
+                                            defaultCountry="US"
+                                            id="company_phone"
                                             type="tel"
-                                            autoComplete="tel"
-                                            value={data.phone}
-                                            onChange={(e) => handleChange('phone', e.target.value)}
+                                            value={data.company_phone}
+                                            onChange={(value) => handleChange('company_phone', value)}
                                             disabled={processing}
                                             placeholder="+1 (555) 123-4567"
                                         />
-                                        {errors.phone && <p className="text-destructive text-sm font-medium">{errors.phone}</p>}
+                                        <InputError message={errors.company_phone} />
                                     </div>
                                 </>
                             )}
@@ -243,7 +255,7 @@ export default function RegisterReseller() {
                                             className="resize-none"
                                             rows={2}
                                         />
-                                        {errors.address && <p className="text-destructive text-sm font-medium">{errors.address}</p>}
+                                        <InputError message={errors.address} />
                                     </div>
 
                                     <div className="grid gap-4 md:grid-cols-2">
@@ -257,7 +269,7 @@ export default function RegisterReseller() {
                                                 disabled={processing}
                                                 placeholder="City"
                                             />
-                                            {errors.city && <p className="text-destructive text-sm font-medium">{errors.city}</p>}
+                                            <InputError message={errors.city} />
                                         </div>
 
                                         <div className="space-y-1.5">
@@ -270,7 +282,7 @@ export default function RegisterReseller() {
                                                 disabled={processing}
                                                 placeholder="State or Province"
                                             />
-                                            {errors.state && <p className="text-destructive text-sm font-medium">{errors.state}</p>}
+                                            <InputError message={errors.state} />
                                         </div>
                                     </div>
 
@@ -285,45 +297,87 @@ export default function RegisterReseller() {
                                                 disabled={processing}
                                                 placeholder="Postal or ZIP code"
                                             />
-                                            {errors.postal_code && <p className="text-destructive text-sm font-medium">{errors.postal_code}</p>}
+                                            <InputError message={errors.postal_code} />
                                         </div>
 
                                         <div className="space-y-1.5">
                                             <Label htmlFor="country">
                                                 Country <span className="text-red-500">*</span>
                                             </Label>
-                                            <Select
+                                            <Combobox
+                                                options={countries}
                                                 value={data.country}
-                                                onValueChange={(value) => handleChange('country', value)}
+                                                onChange={(value) => handleChange('country', value)}
                                                 disabled={processing}
-                                            >
-                                                <SelectTrigger id="country">
-                                                    <SelectValue placeholder="Select a country" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    {countries.map((country) => (
-                                                        <SelectItem key={country.value} value={country.value}>
-                                                            {country.label}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
-                                            {errors.country && <p className="text-destructive text-sm font-medium">{errors.country}</p>}
+                                                placeholder="Select a country"
+                                                searchPlaceholder="Search country..."
+                                                emptyMessage="No country found."
+                                            />
+                                            <InputError message={errors.country} />
                                         </div>
                                     </div>
                                 </>
                             )}
 
-                            {/* Step 3: Account Security */}
+                            {/* Step 3: Administrator Information & Security */}
                             {stepIndex === 3 && (
                                 <>
+                                    <div className="space-y-1.5">
+                                        <Label htmlFor="contact_name">
+                                            Admin Name <span className="text-red-500">*</span>
+                                        </Label>
+                                        <Input
+                                            id="contact_name"
+                                            type="text"
+                                            required
+                                            value={data.contact_name}
+                                            onChange={(e) => handleChange('contact_name', e.target.value)}
+                                            disabled={processing}
+                                            placeholder="Full name of administrator"
+                                        />
+                                        <InputError message={errors.contact_name} />
+                                    </div>
+
+                                    <div className="space-y-1.5">
+                                        <Label htmlFor="contact_email">
+                                            Admin Email <span className="text-red-500">*</span>
+                                        </Label>
+                                        <Input
+                                            id="contact_email"
+                                            type="email"
+                                            required
+                                            value={data.contact_email}
+                                            onChange={(e) => handleChange('contact_email', e.target.value)}
+                                            disabled={processing}
+                                            placeholder="admin@example.com"
+                                        />
+                                        <InputError message={errors.contact_email} />
+                                        <p className="mt-1 text-xs text-gray-500">
+                                            This email will be used for administrator login and system notifications
+                                        </p>
+                                    </div>
+
+                                    <div className="space-y-1.5">
+                                        <Label htmlFor="contact_phone">Admin Phone</Label>
+                                        <PhoneInput
+                                            international
+                                            defaultCountry="GH"
+                                            id="contact_phone"
+                                            type="tel"
+                                            value={data.contact_phone}
+                                            onChange={(value) => handleChange('contact_phone', value)}
+                                            disabled={processing}
+                                            placeholder="+1 (555) 123-4567"
+                                        />
+                                        <InputError message={errors.contact_phone} />
+                                    </div>
+
                                     <div className="space-y-1.5">
                                         <Label htmlFor="password">
                                             Password <span className="text-red-500">*</span>
                                         </Label>
-                                        <Input
+                                        <PasswordInput
                                             id="password"
-                                            type="password"
                                             required
                                             autoComplete="new-password"
                                             value={data.password}
@@ -331,7 +385,7 @@ export default function RegisterReseller() {
                                             disabled={processing}
                                             placeholder="Create a secure password"
                                         />
-                                        {errors.password && <p className="text-destructive text-sm font-medium">{errors.password}</p>}
+                                        <InputError message={errors.password} />
                                         <p className="mt-1 text-xs text-gray-500">
                                             Must contain at least 8 characters with uppercase, lowercase, numbers, and symbols
                                         </p>
@@ -341,19 +395,16 @@ export default function RegisterReseller() {
                                         <Label htmlFor="password_confirmation">
                                             Confirm Password <span className="text-red-500">*</span>
                                         </Label>
-                                        <Input
+                                        <PasswordInput
                                             id="password_confirmation"
-                                            type="password"
                                             required
-                                            autoComplete="new-password"
                                             value={data.password_confirmation}
                                             onChange={(e) => handleChange('password_confirmation', e.target.value)}
+                                            autoComplete="new-password"
                                             disabled={processing}
                                             placeholder="Confirm your password"
                                         />
-                                        {errors.password_confirmation && (
-                                            <p className="text-destructive text-sm font-medium">{errors.password_confirmation}</p>
-                                        )}
+                                        <InputError message={errors.password_confirmation} />
                                     </div>
 
                                     <div className="mt-4 text-sm text-gray-500">

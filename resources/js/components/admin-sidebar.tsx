@@ -1,6 +1,5 @@
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
-import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
@@ -14,6 +13,7 @@ import {
     Handshake,
     LayoutDashboard,
     Package,
+    PenToolIcon,
     UserRoundCog,
     UserRoundSearch,
     Users,
@@ -68,7 +68,7 @@ const mainNavItems: NavItem[] = [
         icon: Package,
     },
     {
-        title: 'System Settings',
+        title: 'Settings',
         url: '/admin/settings',
         icon: Cog,
     },
@@ -86,9 +86,9 @@ const mainNavItems: NavItem[] = [
 
 const footerNavItems: NavItem[] = [
     {
-        title: 'System Logs',
+        title: 'Activity Logs',
         url: '/admin/logs',
-        icon: Database,
+        icon: PenToolIcon,
     },
 ];
 
@@ -113,7 +113,6 @@ export function AdminSidebar() {
 
             <SidebarFooter>
                 <NavFooter items={footerNavItems} className="mt-auto" />
-                <NavUser />
             </SidebarFooter>
         </Sidebar>
     );

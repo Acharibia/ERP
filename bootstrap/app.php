@@ -1,11 +1,11 @@
 <?php
 
-use App\Shared\Http\Middleware\HandleAppearance;
-use App\Shared\Http\Middleware\HandleInertiaRequests;
-use App\Shared\Http\Middleware\EnsureActiveBusinessSelected;
-use App\Shared\Http\Middleware\VerifyAdminAccess;
-use App\Shared\Http\Middleware\VerifyModuleAccess;
-use App\Shared\Http\Middleware\VerifyResellerAccess;
+use App\Central\Http\Middleware\HandleAppearance;
+use App\Central\Http\Middleware\HandleInertiaRequests;
+use App\Central\Http\Middleware\EnsureActiveBusinessSelected;
+use App\Central\Http\Middleware\VerifyAdminAccess;
+use App\Central\Http\Middleware\VerifyModuleAccess;
+use App\Central\Http\Middleware\VerifyResellerAccess;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;

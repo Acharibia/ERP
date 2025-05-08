@@ -2,24 +2,73 @@
 
 namespace App\Auth\Http\Controllers;
 
-use App\Shared\Http\Controllers\Controller;
-use App\Shared\Models\Business;
-use App\Shared\Models\Investor;
-use App\Shared\Models\Reseller;
-use App\Shared\Models\User;
-use App\Support\Enums\UserType;
-use Illuminate\Auth\Events\Registered;
+use App\Businesses\Http\Requests\StoreBusinessRequest;
+use App\Businesses\Services\BusinessService;
+use App\Investos\Http\Requests\StoreInvestorRequest;
+use App\Investors\Services\InvestorService;
+use App\Resellers\Http\Requests\StoreResellerRequest;
+use App\Resellers\Services\ResellerService;
+use App\Central\Http\Controllers\Controller;
+use App\Central\Http\Resources\PackageCollection;
+use App\Central\Models\Package;
+use App\Central\Services\CountryService;
+use App\Central\Services\GenderService;
+use App\Central\Services\IndustryService;
+use App\Central\Services\PackageService;
+use App\Central\Services\StateService;
+use App\Central\Services\TitleService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rules;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class RegisteredUserController extends Controller
 {
+    protected ResellerService $resellerService;
+    protected BusinessService $businessService;
+    protected InvestorService $investorService;
+    protected PackageService $packageService;
+    protected StateService $stateService;
+    protected TitleService $titleService;
+    protected CountryService $countryService;
+    protected GenderService $genderService;
+    protected IndustryService $industryService;
+
+    /**
+     * Create a new RegisteredUserController instance.
+     *
+     * @param ResellerService $resellerService
+     * @param BusinessService $businessService
+     * @param PackageService $packageService
+     * @param InvestorService $investorService
+     * @param StateService $stateService
+     * @param TitleService $titleService
+     * @param CountryService $countryService
+     * @param GenderService $genderService
+     * @param IndustryService $industryService
+     */
+    public function __construct(
+        ResellerService $resellerService,
+        BusinessService $businessService,
+        InvestorService $investorService,
+        PackageService $packageService,
+        StateService $stateService,
+        TitleService $titleService,
+        CountryService $countryService,
+        GenderService $genderService,
+        IndustryService $industryService,
+    ) {
+        $this->resellerService = $resellerService;
+        $this->businessService = $businessService;
+        $this->investorService = $investorService;
+        $this->packageService = $packageService;
+        $this->stateService = $stateService;
+        $this->titleService = $titleService;
+        $this->countryService = $countryService;
+        $this->genderService = $genderService;
+        $this->industryService = $industryService;
+    }
+
     /**
      * Show the user type selection page.
      */
@@ -41,7 +90,14 @@ class RegisteredUserController extends Controller
      */
     public function createBusiness(): Response
     {
-        return Inertia::render('auth/register-business');
+        return Inertia::render('auth/register-business', [
+            'countries' => $this->countryService->getAll(),
+            'states' => $this->stateService->getAll(),
+            'titles' => $this->titleService->getAll(),
+            'genders' => $this->genderService->getAll(),
+            'industries' => $this->industryService->getAll(true),
+            'packages' => new PackageCollection($this->packageService->getPublicPackages()),
+        ]);
     }
 
     /**
@@ -55,141 +111,42 @@ class RegisteredUserController extends Controller
     /**
      * Handle reseller registration.
      */
-    public function storeReseller(Request $request): RedirectResponse
+    public function storeReseller(StoreResellerRequest $request): RedirectResponse
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|lowercase|email|max:255|unique:' . User::class,
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'company_name' => 'required|string|max:255',
-            'phone' => 'nullable|string|max:50',
-        ]);
-
-
-        try {
-            $user = User::create([
-                'name' => $request->name,
-                'email' => $request->email,
-                'password' => Hash::make($request->password),
-                'user_type' => UserType::RESELLER,
-            ]);
-
-            $reseller = Reseller::create([
-                'company_name' => $request->company_name,
-                'contact_name' => $request->name,
-                'email' => $request->email,
-                'phone' => $request->phone,
-                'status' => 'pending',
-                'verification_status' => 'pending',
-            ]);
-
-            $user->reseller_id = $reseller->id;
-            $user->save();
-
-
-            event(new Registered($user));
-            Auth::login($user);
-
-            return to_route('reseller.dashboard');
-        } catch (\Exception $e) {
-            return back()->withErrors(['general' => 'Registration failed. Please try again.']);
-        }
+        $this->resellerService->register($request);
+        return to_route('reseller.dashboard');
     }
 
     /**
      * Handle business registration.
      */
-    public function storeBusiness(Request $request): RedirectResponse
+    public function storeBusiness(StoreBusinessRequest $request): RedirectResponse
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|lowercase|email|max:255|unique:' . User::class,
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'business_name' => 'required|string|max:255',
-            'industry' => 'nullable|string|max:100',
-        ]);
+        // Check if this is just validation or final submission
+        $validateOnly = $request->query('validate_only', false);
 
-
-        try {
-            $user = User::create([
-                'name' => $request->name,
-                'email' => $request->email,
-                'password' => Hash::make($request->password),
-                'user_type' => UserType::BUSINESS_USER,
-            ]);
-
-            // Create a business record
-            $business = Business::create([
-                'name' => $request->business_name,
-                'tenant_id' => 'business_' . strtolower(str_replace(' ', '_', $request->business_name)) . '_' . uniqid(),
-                'schema_version' => '1.0',
-                'settings' => json_encode([
-                    'industry' => $request->industry,
-                ]),
-                'subscription_status' => 'trial',
-            ]);
-
-            // Associate user with business
-            DB::table('user_businesses')->insert([
-                'user_id' => $user->id,
-                'business_id' => $business->id,
-                'is_primary' => true,
-                'is_business_admin' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-
-
-            event(new Registered($user));
-            Auth::login($user);
-
-            return to_route('business.dashboard');
-        } catch (\Exception $e) {
-            return back()->withErrors(['general' => 'Registration failed. Please try again.']);
+        if ($validateOnly) {
+            // For step validation, we don't perform actual registration
+            // Just return with a flash success message
+            return back()->with('success', true);
         }
+
+        // This is final submission, proceed with registration
+        $this->businessService->register($request);
+        return to_route('modules.core.dashboard');
     }
 
     /**
      * Handle investor registration.
      */
-    public function storeInvestor(Request $request): RedirectResponse
+    public function storeInvestor(StoreInvestorRequest $request): RedirectResponse
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|lowercase|email|max:255|unique:' . User::class,
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'investor_type' => 'required|string|exists:investor_types,code',
-        ]);
+        $result = $this->investorService->register($request);
 
-
-        try {
-            $user = User::create([
-                'name' => $request->name,
-                'email' => $request->email,
-                'password' => Hash::make($request->password),
-                'user_type' => UserType::INVESTOR,
-            ]);
-
-            // Create investor record
-            $investor = Investor::create([
-                'user_id' => $user->id,
-                'type_id' => $request->investor_type,
-                'status' => 'active',
-            ]);
-
-            // Create investor profile
-            InvestorProfile::create([
-                'investor_id' => $investor->id,
-                'display_name' => $request->name,
-            ]);
-
-
-            event(new Registered($user));
-            Auth::login($user);
-
-            return to_route('investor.dashboard');
-        } catch (\Exception $e) {
-            return back()->withErrors(['general' => 'Registration failed. Please try again.']);
+        if (!$result['success']) {
+            return back()->withErrors(['general' => $result['message']]);
         }
+
+        return to_route('investor.dashboard');
     }
 }

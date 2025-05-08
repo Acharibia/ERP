@@ -6,7 +6,7 @@ import { type ReactNode } from 'react';
 
 // Import all layout templates
 import AdminSidebarLayout from '@/layouts/app/admin/sidebar-layout';
-import BusinessSidebarLayout from '@/layouts/app/business/sidebar-layout';
+import ModuleCoreSidebarLayout from '@/layouts/app/modules/core/sidebar-layout';
 import ModuleCRMSidebarLayout from '@/layouts/app/modules/crm/sidebar-layout';
 import ModuleHRSidebarLayout from '@/layouts/app/modules/hr/sidebar-layout';
 import ModuleInventorySidebarLayout from '@/layouts/app/modules/inventory/sidebar-layout';
@@ -35,6 +35,8 @@ export default function AppLayout({ children, breadcrumbs, ...props }: AppLayout
         // Module access
         if (activeAccessType === 'module' && activeModuleCode) {
             switch (activeModuleCode) {
+                case 'core':
+                    return ModuleCoreSidebarLayout;
                 case 'hr':
                     return ModuleHRSidebarLayout;
                 case 'crm':
@@ -42,11 +44,11 @@ export default function AppLayout({ children, breadcrumbs, ...props }: AppLayout
                 case 'inventory':
                     return ModuleInventorySidebarLayout;
                 default:
-                    return BusinessSidebarLayout;
+                    return ModuleCoreSidebarLayout;
             }
         }
         // Default to BusinessSidebarLayout
-        return BusinessSidebarLayout;
+        return ModuleCoreSidebarLayout;
     };
 
     const LayoutComponent = getLayoutComponent();

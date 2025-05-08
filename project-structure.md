@@ -8,7 +8,7 @@ app/
 │ │ └── DashboardController.php # Admin dashboard
 │ │
 │ ├── Requests/ # Request validation for admin actions
-│ │ ├── BusinessStoreRequest.php
+│ │ ├── StoreBusinessRequest.php
 │ │ └── BusinessUpdateRequest.php
 │ │
 │ └── Services/ # Business logic for admin operations

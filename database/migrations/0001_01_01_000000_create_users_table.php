@@ -12,6 +12,7 @@ return new class extends Migration {
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
+            $table->string('global_id')->nullable()->unique('global_id');
             $table->string('name');
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
@@ -20,12 +21,13 @@ return new class extends Migration {
             $table->boolean('is_super_admin')->default(false);
             $table->foreignId('reseller_id')->nullable()->constrained()->onDelete('set null');
             $table->string('status')->default('active'); // 'active', 'inactive', 'suspended'
-            $table->string('profile_photo_path', 2048)->nullable();
             $table->timestamp('last_login_at')->nullable();
             $table->string('last_login_ip', 45)->nullable();
             $table->timestamp('password_changed_at')->nullable();
             $table->rememberToken();
             $table->timestamps();
+            $table->softDeletes();
+
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {

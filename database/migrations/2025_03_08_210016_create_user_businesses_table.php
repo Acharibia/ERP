@@ -17,7 +17,6 @@ return new class extends Migration {
             $table->boolean('is_primary')->default(false);
             $table->boolean('is_business_admin')->default(false);
             $table->timestamps();
-
             $table->unique(['user_id', 'business_id']);
         });
     }

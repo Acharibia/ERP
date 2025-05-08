@@ -1,6 +1,5 @@
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
-import { NavUser } from '@/components/nav-user';
 import {
     Sidebar,
     SidebarContent,
@@ -20,12 +19,12 @@ import AppLogo from './app-logo';
 const mainNavItems: NavItem[] = [
     {
         title: 'Dashboard',
-        url: '/business/dashboard',
+        url: route('modules.core.dashboard'),
         icon: LayoutDashboard,
     },
     {
         title: 'Users',
-        url: '/business/users',
+        url: route('modules.core.dashboard'),
         icon: Users,
     },
     {
@@ -73,7 +72,7 @@ export function CoreModuleSidebar() {
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href="/business/dashboard" prefetch>
+                            <Link href={route('modules.core.dashboard')} prefetch>
                                 <AppLogo />
                             </Link>
                         </SidebarMenuButton>
@@ -103,7 +102,6 @@ export function CoreModuleSidebar() {
 
             <SidebarFooter>
                 <NavFooter items={supportNavItems} className="mt-auto" />
-                <NavUser />
             </SidebarFooter>
         </Sidebar>
     );

@@ -1,10 +1,9 @@
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
-import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { BarChart3, Calendar, Clock, DollarSign, Grid3X3, LayoutDashboard, Settings, UserRound, Users } from 'lucide-react';
+import { BarChart3, Building2, Calendar, Clock, DollarSign, HelpCircle, LayoutDashboard, Settings, Users } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -21,7 +20,7 @@ const mainNavItems: NavItem[] = [
     {
         title: 'Departments',
         url: '/modules/hr/departments',
-        icon: UserRound,
+        icon: Building2,
     },
     {
         title: 'Leave Management',
@@ -39,8 +38,8 @@ const mainNavItems: NavItem[] = [
         icon: DollarSign,
     },
     {
-        title: 'Reports',
-        url: '/modules/hr/reports',
+        title: 'Analytics',
+        url: '/modules/hr/analytics',
         icon: BarChart3,
     },
     {
@@ -52,9 +51,9 @@ const mainNavItems: NavItem[] = [
 
 const footerNavItems: NavItem[] = [
     {
-        title: 'Switch Module',
-        url: '/access/selection',
-        icon: Grid3X3,
+        title: 'Help Center',
+        url: '/business/help',
+        icon: HelpCircle,
     },
 ];
 
@@ -79,7 +78,6 @@ export function HRModuleSidebar() {
 
             <SidebarFooter>
                 <NavFooter items={footerNavItems} className="mt-auto" />
-                <NavUser />
             </SidebarFooter>
         </Sidebar>
     );

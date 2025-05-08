@@ -1,5 +1,4 @@
 import { NavMain } from '@/components/nav-main';
-import { NavUser } from '@/components/nav-user';
 import {
     Sidebar,
     SidebarContent,
@@ -13,8 +12,9 @@ import {
 } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { BarChart3, Building2, CreditCard, FileText, LayoutDashboard, Settings, ShoppingCart, Users } from 'lucide-react';
+import { BarChart3, Building2, CreditCard, FileText, HelpCircle, LayoutDashboard, Settings, ShoppingCart, Users } from 'lucide-react';
 import AppLogo from './app-logo';
+import { NavFooter } from './nav-footer';
 
 const mainNavItems: NavItem[] = [
     {
@@ -23,8 +23,8 @@ const mainNavItems: NavItem[] = [
         icon: LayoutDashboard,
     },
     {
-        title: 'Clients',
-        url: '/reseller/clients',
+        title: 'Businesses',
+        url: '/reseller/businesses',
         icon: Building2,
     },
     {
@@ -67,6 +67,14 @@ const settingsNavItems: NavItem[] = [
     },
 ];
 
+const footerNavItems: NavItem[] = [
+    {
+        title: 'Help Center',
+        url: '/business/help',
+        icon: HelpCircle,
+    },
+];
+
 export function ResellerSidebar() {
     return (
         <Sidebar collapsible="icon" variant="inset">
@@ -103,7 +111,7 @@ export function ResellerSidebar() {
             </SidebarContent>
 
             <SidebarFooter>
-                <NavUser />
+                <NavFooter items={footerNavItems} className="mt-auto" />
             </SidebarFooter>
         </Sidebar>
     );

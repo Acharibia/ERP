@@ -1,6 +1,5 @@
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
-import { NavUser } from '@/components/nav-user';
 import {
     Sidebar,
     SidebarContent,
@@ -14,7 +13,7 @@ import {
 } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { BarChart3, CreditCard, FileText, HelpCircle, LayoutDashboard, Settings, ShoppingCart, Users } from 'lucide-react';
+import { BarChart3, CreditCard, FileText, HelpCircle, LayoutDashboard, Lock, Settings, ShoppingCart, Users } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -27,6 +26,11 @@ const mainNavItems: NavItem[] = [
         title: 'Users',
         url: '/business/users',
         icon: Users,
+    },
+    {
+        title: 'Access Control',
+        url: '/business/users',
+        icon: Lock,
     },
     {
         title: 'Subscription',
@@ -103,7 +107,6 @@ export function BusinessSidebar() {
 
             <SidebarFooter>
                 <NavFooter items={supportNavItems} className="mt-auto" />
-                <NavUser />
             </SidebarFooter>
         </Sidebar>
     );

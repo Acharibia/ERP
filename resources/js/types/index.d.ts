@@ -33,6 +33,12 @@ export interface SharedData {
     activeModuleCode?: string | null;
     activeBusinessId?: number | null;
     [key: string]: unknown;
+    flash?: {
+        success?: boolean;
+        error?: string;
+        message?: string;
+        validation?: unknown;
+      };
 }
 
 export interface User {
@@ -76,7 +82,79 @@ export interface Module {
 }
 
 export interface PageProps extends SharedData {
-    currentBusiness?: Business | null;
-    userBusinesses?: Business[];
+    activeBusiness?: Business | null;
     availableModules?: Module[];
+    userBusinesses?: Business[];
+
 }
+
+/**
+ * Package/subscription plan definition
+ */
+export type Package = {
+    id: string;
+    name: string;
+    description: string;
+    base_price: number;
+    user_limit: number | null;
+    storage_limit: number | null;
+    modules: Array<{
+        id: number;
+        name: string;
+        code: string;
+        description: string;
+    }>;
+};
+
+/**
+ * Country data definition
+ */
+export type Country = {
+    id: string;
+    name: string;
+    code: string;
+    phone_code: string;
+    is_active: boolean;
+};
+
+/**
+ * State/province data definition
+ */
+export type State = {
+    id: string;
+    country_id: string;
+    name: string;
+    is_active: boolean;
+};
+
+/**
+ * Title/prefix data definition (Mr., Mrs., Dr., etc.)
+ */
+export type Title = {
+    id: string;
+    name: string;
+    abbreviation: string;
+    is_active: boolean;
+};
+
+/**
+ * Gender data definition
+ */
+export type Gender = {
+    id: string;
+    name: string;
+    code: string;
+    is_active: boolean;
+};
+
+/**
+ * Industry data definition
+ */
+export type Industry = {
+    id: string;
+    name: string;
+    code: string;
+    description: string;
+    parent_id: string | null;
+    is_active: boolean;
+};

@@ -2,11 +2,9 @@
 
 namespace App\Admins\Http\Controllers;
 
-use App\Admins\Http\Requests\ResellerStoreRequest;
-use App\Admins\Http\Requests\ResellerUpdateRequest;
 use App\Admins\Services\ResellerService;
-use App\Shared\Http\Controllers\Controller;
-use App\Shared\Models\Reseller;
+use App\Central\Http\Controllers\Controller;
+use App\Central\Models\Reseller;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -43,10 +41,10 @@ class ResellerController extends Controller
     /**
      * Store a newly created reseller in storage.
      *
-     * @param  \App\Admins\Http\Requests\ResellerStoreRequest  $request
+     * @param  \App\Admins\Http\Requests\StoreResellerRequest  $request
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function store(ResellerStoreRequest $request)
+    public function store(StoreResellerRequest $request)
     {
         $reseller = $this->resellerService->createReseller($request->validated());
 
@@ -56,7 +54,7 @@ class ResellerController extends Controller
     /**
      * Display the specified reseller.
      *
-     * @param \App\Shared\Models\Reseller $reseller
+     * @param \App\Central\Models\Reseller $reseller
      * @return \Inertia\Response
      */
     public function show(Reseller $reseller)
@@ -80,7 +78,7 @@ class ResellerController extends Controller
     /**
      * Show the form for editing the specified reseller.
      *
-     * @param \App\Shared\Models\Reseller $reseller
+     * @param \App\Central\Models\Reseller $reseller
      * @return \Inertia\Response
      */
     public function edit(Reseller $reseller)
@@ -95,7 +93,7 @@ class ResellerController extends Controller
      * Update the specified reseller in storage.
      *
      * @param  \App\Admins\Http\Requests\ResellerUpdateRequest  $request
-     * @param \App\Shared\Models\Reseller $reseller
+     * @param \App\Central\Models\Reseller $reseller
      * @return \Illuminate\Http\RedirectResponse
      */
     public function update(ResellerUpdateRequest $request, Reseller $reseller)
@@ -109,7 +107,7 @@ class ResellerController extends Controller
     /**
      * Remove the specified reseller from storage.
      *
-     * @param \App\Shared\Models\Reseller $reseller
+     * @param \App\Central\Models\Reseller $reseller
      * @return \Illuminate\Http\RedirectResponse
      */
     public function destroy(Reseller $reseller)

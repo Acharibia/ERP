@@ -1,6 +1,4 @@
 // app-layout-provider.tsx
-import AppHeaderLayout from '@/layouts/app/app-header-layout';
-import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
 import { type BreadcrumbItem } from '@/types';
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 
@@ -31,11 +29,10 @@ interface AppLayoutProviderProps {
 }
 
 // Provider that determines which layout to use
-export function AppLayoutProvider({ children, breadcrumbs }: AppLayoutProviderProps) {
+export function AppLayoutProvider({ children }: AppLayoutProviderProps) {
     const [layout, setLayout] = useState<AppLayoutType>('sidebar');
 
     useEffect(() => {
-        // Get layout preference from localStorage
         const savedLayout = localStorage.getItem(LAYOUT_STORAGE_KEY);
         if (savedLayout === 'sidebar' || savedLayout === 'header') {
             setLayout(savedLayout as AppLayoutType);
@@ -47,12 +44,5 @@ export function AppLayoutProvider({ children, breadcrumbs }: AppLayoutProviderPr
         localStorage.setItem(LAYOUT_STORAGE_KEY, newLayout);
     };
 
-    // Render the appropriate layout component based on the current layout setting
-    const LayoutComponent = layout === 'sidebar' ? AppSidebarLayout : AppHeaderLayout;
-
-    return (
-        <AppLayoutContext.Provider value={{ layout, setLayout: updateLayout }}>
-            <LayoutComponent breadcrumbs={breadcrumbs}>{children}</LayoutComponent>
-        </AppLayoutContext.Provider>
-    );
+    return <AppLayoutContext.Provider value={{ layout, setLayout: updateLayout }}>{children}</AppLayoutContext.Provider>;
 }

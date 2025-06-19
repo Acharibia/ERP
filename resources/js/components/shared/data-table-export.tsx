@@ -7,20 +7,29 @@ import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { toast } from 'sonner'; // Make sure this import is correct
+import { toast } from 'sonner';
 
 interface DataTableExportProps<TData> {
     table: Table<TData>;
     dataTableClass: string;
+    onExport?: (format: string) => Promise<void>;
 }
 
-export function DataTableExport<TData>({ table, dataTableClass }: DataTableExportProps<TData>) {
+export function DataTableExport<TData>({ table, dataTableClass, onExport }: DataTableExportProps<TData>) {
     const [isExporting, setIsExporting] = useState<string | null>(null);
 
     const handleExport = async (format: 'csv' | 'excel' | 'pdf') => {
         try {
             setIsExporting(format);
 
+            // If onExport prop is provided, use the new route-based system
+            if (onExport) {
+                await onExport(format);
+                toast.success(`Your data has been exported as ${format.toUpperCase()}`);
+                return;
+            }
+
+            // Fallback to original behavior for backward compatibility
             // Get the current table state
             const { columnFilters, globalFilter, sorting } = table.getState();
 

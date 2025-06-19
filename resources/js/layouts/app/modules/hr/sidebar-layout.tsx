@@ -1,7 +1,8 @@
+//@/layouts/app/modules/hr/sidebar-layout.tsx
 import { AppContent } from '@/components/app-content';
 import { AppShell } from '@/components/app-shell';
 import { AppSidebarHeader } from '@/components/app-sidebar-header';
-import { HRModuleSidebar } from '@/components/hr-sidebar';
+import { HRModuleSidebar } from '@/components/hr/hr-sidebar';
 import { type BreadcrumbItem } from '@/types';
 import { type ReactNode } from 'react';
 

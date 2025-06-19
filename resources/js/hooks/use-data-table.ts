@@ -22,8 +22,15 @@ import {
     RowSelection
 } from '@/types/data-table'
 
+interface DataTableRoutes {
+    process: string; // Route name for processing data (e.g., 'modules.hr.datatable.process')
+    filterOptions?: string; // Route name for getting filter options (e.g., 'modules.hr.datatable.filter-options')
+    export?: string; // Route name for exporting data (e.g., 'modules.hr.datatable.export')
+}
+
 interface UseDataTableProps<T extends BaseRowData> {
     dataTableClass: string
+    routes: DataTableRoutes
     initialState?: Partial<DataTableState>
     preserveStateKey?: string
     onDataLoaded?: (data: DataTableResponse<T>) => void
@@ -32,6 +39,7 @@ interface UseDataTableProps<T extends BaseRowData> {
 
 export function useDataTable<T extends BaseRowData>({
     dataTableClass,
+    routes,
     initialState = {},
     preserveStateKey,
     onDataLoaded,
@@ -106,7 +114,7 @@ export function useDataTable<T extends BaseRowData>({
 
     // Fetch data from server using Axios
     const fetchData = useCallback(async (forceFetch = false) => {
-        if (!dataTableClass) return
+        if (!dataTableClass || !routes.process) return
 
         setIsLoading(true)
         setError(null)
@@ -149,8 +157,9 @@ export function useDataTable<T extends BaseRowData>({
                 }))
             }
 
+            // Use the provided route for processing
             const response = await axios.post(
-                route('datatable.process', { dataTable: dataTableClass }),
+                route(routes.process, { dataTable: dataTableClass }),
                 params
             )
 
@@ -184,6 +193,7 @@ export function useDataTable<T extends BaseRowData>({
         }
     }, [
         dataTableClass,
+        routes.process,
         stateKey,
         columns,
         lastFetchId,
@@ -191,6 +201,60 @@ export function useDataTable<T extends BaseRowData>({
         onError,
         tableState
     ])
+
+    // Fetch filter options (if route is provided)
+    const fetchFilterOptions = useCallback(async () => {
+        if (!routes.filterOptions || !dataTableClass) return
+
+        try {
+            const response = await axios.get(
+                route(routes.filterOptions, { dataTable: dataTableClass })
+            )
+            setFilterOptions(response.data)
+        } catch (err) {
+            console.error('Error fetching filter options:', err)
+        }
+    }, [routes.filterOptions, dataTableClass])
+
+    // Export data (if route is provided)
+    const exportData = useCallback(async (format: string = 'csv') => {
+        if (!routes.export) {
+            console.warn('Export route not provided')
+            return
+        }
+
+        try {
+            const currentState = JSON.parse(sessionStorage.getItem(stateKey) || JSON.stringify(tableState))
+
+            const params = {
+                dataTable: dataTableClass,
+                format,
+                filters: currentState.columnFilters || {},
+                search: currentState.globalFilter || '',
+                sort: currentState.sorting || []
+            }
+
+            const response = await axios.get(route(routes.export), {
+                params,
+                responseType: 'blob'
+            })
+
+            // Create download link
+            const url = window.URL.createObjectURL(new Blob([response.data]))
+            const link = document.createElement('a')
+            link.href = url
+            link.setAttribute('download', `${dataTableClass}-export.${format}`)
+            document.body.appendChild(link)
+            link.click()
+            link.remove()
+            window.URL.revokeObjectURL(url)
+        } catch (err) {
+            console.error('Error exporting data:', err)
+            if (onError) {
+                onError(err)
+            }
+        }
+    }, [routes.export, dataTableClass, stateKey, tableState, onError])
 
     // Create Tanstack table instance
     const table = useReactTable({
@@ -296,6 +360,10 @@ export function useDataTable<T extends BaseRowData>({
     // Initial fetch on mount
     useEffect(() => {
         fetchData(true)
+        // Also fetch filter options if route is available
+        if (routes.filterOptions) {
+            fetchFilterOptions()
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
@@ -334,9 +402,12 @@ export function useDataTable<T extends BaseRowData>({
         filterOptions,
         error,
         fetchData,
+        fetchFilterOptions,
+        exportData,
         resetTable,
         tableState,
         setTableState,
-        changePage
+        changePage,
+        routes // Return routes for use in components
     }
 }

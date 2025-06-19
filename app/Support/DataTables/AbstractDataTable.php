@@ -103,6 +103,7 @@ abstract class AbstractDataTable
 
         return $this;
     }
+
     /**
      * Add a badge column.
      *
@@ -142,14 +143,18 @@ abstract class AbstractDataTable
             'type' => 'badge',
         ], $options));
     }
+
     /**
      * Add a relationship column.
      *
-     * @param string $relationship
-     * @param string $field
-     * @param string|null $title
-     * @param array $options
-     * @param array $colorMap If it's a badge type, map of values to colors
+     * @param string $relationship The relationship name (e.g., 'department')
+     * @param string $field The field to display from the related model (e.g., 'name')
+     * @param string|null $title Column title
+     * @param array $options Additional column options
+     * @param string $relatedTable The related table name (e.g., 'departments')
+     * @param string $foreignKey The foreign key in the main table (e.g., 'department_id')
+     * @param string $relatedKey The primary key in the related table (e.g., 'id')
+     * @param array $badgeConfig Badge configuration if this is a badge column
      * @return $this
      */
     public function addRelationshipColumn(
@@ -157,25 +162,41 @@ abstract class AbstractDataTable
         string $field,
         ?string $title = null,
         array $options = [],
-        array $colorMap = []
+        string $relatedTable = '',
+        string $foreignKey = '',
+        string $relatedKey = 'id',
+        array $badgeConfig = []
     ): self {
         $name = $relationship . '.' . $field;
         $title = $title ?? Str::title(str_replace('_', ' ', $field));
 
-        // If it's a badge type, store color mapping
+        // Auto-generate table and foreign key if not provided
+        if (empty($relatedTable)) {
+            $relatedTable = Str::plural($relationship);
+        }
+        if (empty($foreignKey)) {
+            $foreignKey = $relationship . '_id';
+        }
+
+        // If it's a badge type, store badge configuration
         if (($options['type'] ?? null) === 'badge') {
-            $options['colorMap'] = $colorMap ?: [
-                'admin' => 'primary',
-                'manager' => 'secondary',
-                'user' => 'default',
-                'default' => 'default'
+            $options['badgeConfig'] = $badgeConfig ?: [
+                'admin' => ['color' => 'primary', 'icon' => null],
+                'manager' => ['color' => 'secondary', 'icon' => null],
+                'user' => ['color' => 'default', 'icon' => null],
+                'default' => ['color' => 'default', 'icon' => null]
             ];
         }
 
         return $this->addColumn($name, $title, array_merge([
-            'orderable' => false,
+            'orderable' => true,
+            'searchable' => true,
             'relationship' => $relationship,
-            'relationField' => $field
+            'relationField' => $field,
+            'relatedTable' => $relatedTable,
+            'foreignKey' => $foreignKey,
+            'relatedKey' => $relatedKey,
+            'isRelationship' => true,
         ], $options));
     }
 
@@ -184,7 +205,7 @@ abstract class AbstractDataTable
      *
      * @param string $name
      * @param string|null $title
-     * @param array $options
+     * @param array $actions
      * @return $this
      */
     public function addActionColumn(
@@ -200,10 +221,10 @@ abstract class AbstractDataTable
             'orderable' => false,
             'searchable' => false,
             'exportable' => false,
-            'className' => 'dt-center',
+            'className' => 'text-center',
             'visible' => true,
             'type' => 'actions',
-            'actions' => $actions, // Store the available actions with icons
+            'actions' => $actions,
         ]);
     }
 
@@ -224,15 +245,6 @@ abstract class AbstractDataTable
     ): self {
         // Store format for use in transformation
         $options['dateFormat'] = $format;
-
-        // Add a formatter method for this column
-        $columnName = Str::studly($name);
-        $this->{'format' . $columnName . 'Column'} = function ($item) use ($name, $format) {
-            if (empty($item->{$name})) {
-                return null;
-            }
-            return \Carbon\Carbon::parse($item->{$name})->format($format);
-        };
 
         return $this->addColumn($name, $title, array_merge([
             'type' => 'date',
@@ -300,9 +312,21 @@ abstract class AbstractDataTable
      * @param Collection $items
      * @return array
      */
-
     protected function transform(Collection $items): array
     {
+        // Debug: Check what's actually being loaded
+        if ($items->isNotEmpty()) {
+            $firstItem = $items->first();
+            \Log::info('Position Debug Info:', [
+                'item_keys' => array_keys($firstItem->toArray()),
+                'department_loaded' => $firstItem->relationLoaded('department'),
+                'department_data' => $firstItem->department?->toArray(),
+                'raw_department_name' => $firstItem->department?->name,
+                'department_id' => $firstItem->department_id,
+            ]);
+        }
+
+        // Debug the transform process
         $columns = $this->getColumns();
         $data = [];
 
@@ -311,13 +335,48 @@ abstract class AbstractDataTable
             foreach ($columns as $key => $column) {
                 $name = $column['data'] ?? $key;
 
+                // Debug specific column
+                if ($name === 'department.name') {
+                    \Log::info('Processing department.name column:', [
+                        'column_config' => $column,
+                        'isRelationship' => $column['isRelationship'] ?? false,
+                        'relationship' => $column['relationship'] ?? null,
+                        'relationField' => $column['relationField'] ?? null,
+                    ]);
+                }
+
                 // Check if there's a formatter defined
-                if (method_exists($this, 'format' . Str::studly($name) . 'Column')) {
-                    $value = $this->{'format' . Str::studly($name) . 'Column'}($item);
+                if (method_exists($this, 'format' . Str::studly(str_replace('.', '', $name)) . 'Column')) {
+                    $value = $this->{'format' . Str::studly(str_replace('.', '', $name)) . 'Column'}($item);
+
+                    if ($name === 'department.name') {
+                        \Log::info('Used custom formatter for department.name:', ['value' => $value]);
+                    }
                 } else {
-                    // Handle nested attributes using dot notation
-                    if (str_contains($name, '.')) {
+                    // Handle relationship columns FIRST (before generic dot notation)
+                    if (($column['isRelationship'] ?? false)) {
+                        $relationship = $column['relationship'];
+                        $field = $column['relationField'];
+
+                        // Get the related model and extract the field
+                        $relatedModel = $item->{$relationship};
+                        $value = $relatedModel ? $relatedModel->{$field} : null;
+
+                        if ($name === 'department.name') {
+                            \Log::info('Relationship column processing:', [
+                                'relationship' => $relationship,
+                                'field' => $field,
+                                'relatedModel' => $relatedModel?->toArray(),
+                                'value' => $value,
+                            ]);
+                        }
+                    } elseif (str_contains($name, '.')) {
+                        // Handle other nested attributes using dot notation
                         $value = data_get($item, $name);
+
+                        if ($name === 'department.name') {
+                            \Log::info('Dot notation processing:', ['value' => $value]);
+                        }
                     } else {
                         $value = $item->{$name} ?? null;
 
@@ -336,6 +395,15 @@ abstract class AbstractDataTable
             $row['id'] = $item->id ?? null;
 
             $data[] = $row;
+        }
+
+        // Debug: Check the transformed data
+        if (!empty($data)) {
+            \Log::info('Transformed Data:', [
+                'first_row_keys' => array_keys($data[0]),
+                'department_name_value' => $data[0]['department.name'] ?? 'NOT_FOUND',
+                'sample_row' => $data[0],
+            ]);
         }
 
         return $data;
@@ -364,7 +432,7 @@ abstract class AbstractDataTable
             array_unshift($result, [
                 'data' => 'select',
                 'name' => 'select',
-                'title' => 'Select', // Change from '<Checkbox />' to a text label
+                'title' => 'Select',
                 'visible' => true,
                 'searchable' => false,
                 'orderable' => false,
@@ -419,10 +487,12 @@ abstract class AbstractDataTable
                 $searchable = $column['searchable'] ?? true;
 
                 if ($searchable) {
-                    // Handle relations using dot notation
-                    if (str_contains($name, '.')) {
-                        list($relation, $field) = $this->parseRelationField($name);
-                        $q->orWhereHas($relation, function ($subQuery) use ($field, $searchValue) {
+                    // Handle relationship columns
+                    if ($column['isRelationship'] ?? false) {
+                        $relationship = $column['relationship'];
+                        $field = $column['relationField'];
+
+                        $q->orWhereHas($relationship, function ($subQuery) use ($field, $searchValue) {
                             $subQuery->where($field, 'like', "%{$searchValue}%");
                         });
                     } else {
@@ -445,15 +515,24 @@ abstract class AbstractDataTable
     {
         $filters = $request->input('filters', []);
 
-        foreach ($filters as $column => $value) {
+        foreach ($filters as $columnName => $value) {
             if (empty($value)) {
                 continue;
             }
 
-            // Handle relations using dot notation
-            if (str_contains($column, '.')) {
-                list($relation, $field) = $this->parseRelationField($column);
-                $query->whereHas($relation, function ($subQuery) use ($field, $value) {
+            // Find the column configuration
+            $column = $this->getColumns()[$columnName] ?? null;
+
+            if (!$column) {
+                continue;
+            }
+
+            // Handle relationship columns
+            if ($column['isRelationship'] ?? false) {
+                $relationship = $column['relationship'];
+                $field = $column['relationField'];
+
+                $query->whereHas($relationship, function ($subQuery) use ($field, $value) {
                     if (is_array($value)) {
                         $subQuery->whereIn($field, $value);
                     } else {
@@ -463,9 +542,9 @@ abstract class AbstractDataTable
             } else {
                 // Regular column
                 if (is_array($value)) {
-                    $query->whereIn($column, $value);
+                    $query->whereIn($columnName, $value);
                 } else {
-                    $query->where($column, 'like', "%{$value}%");
+                    $query->where($columnName, 'like', "%{$value}%");
                 }
             }
         }
@@ -484,7 +563,7 @@ abstract class AbstractDataTable
         $sortColumn = $request->input('order.0.column', 0);
         $sortDir = $request->input('order.0.dir', 'asc');
 
-        // Fallback to default sort if not specified
+        // Handle TanStack table sorting format
         if ($request->has('sort')) {
             $sortData = $request->input('sort', []);
             if (!empty($sortData)) {
@@ -493,22 +572,70 @@ abstract class AbstractDataTable
                         $columnName = $sort['id'];
                         $direction = $sort['desc'] ? 'desc' : 'asc';
 
-                        // Handle relations
-                        if (str_contains($columnName, '.')) {
-                            // For relations, we might need more complex logic
-                            // This is a simplified approach
-                            list($relation, $field) = $this->parseRelationField($columnName);
-                            $query->orderBy($columnName, $direction);
-                        } else {
-                            $query->orderBy($columnName, $direction);
-                        }
+                        $this->applySingleSort($query, $columnName, $direction, $columns);
                     }
                 }
+                return;
             }
-        } elseif (isset($columns[$sortColumn]) && $this->isColumnOrderable($columns[$sortColumn])) {
-            $columnName = $this->getColumnName($columns[$sortColumn]);
-            $query->orderBy($columnName, $sortDir);
         }
+
+        // Fallback to traditional DataTables format
+        if (isset($columns[$sortColumn]) && $this->isColumnOrderable($columns[$sortColumn])) {
+            $columnName = $this->getColumnName($columns[$sortColumn]);
+            $this->applySingleSort($query, $columnName, $direction ?? $sortDir, $columns);
+        }
+    }
+
+    /**
+     * Apply a single sort to the query.
+     *
+     * @param EloquentBuilder|QueryBuilder $query
+     * @param string $columnName
+     * @param string $direction
+     * @param array $columns
+     * @return void
+     */
+    protected function applySingleSort($query, string $columnName, string $direction, array $columns): void
+    {
+        // Find the column configuration
+        $column = $columns[$columnName] ?? null;
+
+        if (!$column) {
+            return;
+        }
+
+        // Handle relationship sorting
+        if ($column['isRelationship'] ?? false) {
+            $relatedTable = $column['relatedTable'];
+            $foreignKey = $column['foreignKey'];
+            $relatedKey = $column['relatedKey'];
+            $field = $column['relationField'];
+
+            // Use a subquery approach for relationship sorting
+            $query->orderBy(
+                function ($subQuery) use ($relatedTable, $foreignKey, $relatedKey, $field) {
+                    $subQuery->select($field)
+                        ->from($relatedTable)
+                        ->whereColumn($relatedTable . '.' . $relatedKey, $this->getMainTable() . '.' . $foreignKey)
+                        ->limit(1);
+                },
+                $direction
+            );
+        } else {
+            // Regular column sorting
+            $query->orderBy($columnName, $direction);
+        }
+    }
+
+    /**
+     * Get the main table name from the query.
+     *
+     * @return string
+     */
+    protected function getMainTable(): string
+    {
+        $query = $this->query();
+        return $query->getModel()->getTable();
     }
 
     /**

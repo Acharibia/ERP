@@ -1,6 +1,7 @@
 <?php
 
 use App\Auth\Http\Controllers\AuthenticatedSessionController;
+use App\Auth\Http\Controllers\BusinessSwitchController;
 use App\Auth\Http\Controllers\ConfirmablePasswordController;
 use App\Auth\Http\Controllers\EmailVerificationNotificationController;
 use App\Auth\Http\Controllers\EmailVerificationPromptController;
@@ -67,6 +68,8 @@ Route::middleware('auth')->group(function () {
         ->name('password.confirm');
 
     Route::post('confirm-password', [ConfirmablePasswordController::class, 'store']);
+
+    Route::post('/switch-business', [BusinessSwitchController::class, 'switch'])->name('business.switch');
 
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
         ->name('logout');

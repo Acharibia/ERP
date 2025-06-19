@@ -1,5 +1,4 @@
 "use client"
-
 import * as React from "react"
 import { Check, ChevronsUpDown } from "lucide-react"
 
@@ -66,30 +65,37 @@ export function Combobox<T extends Record<string, unknown>>({
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-full p-0">
+      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
         <Command>
           <CommandInput placeholder={searchPlaceholder} className="h-9" />
           <CommandList>
             <CommandEmpty>{emptyMessage}</CommandEmpty>
             <CommandGroup>
-              {options?.map((option, index) => (
-                <CommandItem
-                  key={index}
-                  value={String(option[optionValue])}
-                  onSelect={(currentValue) => {
-                    onChange(currentValue === String(value) ? "" : (currentValue as T[keyof T]))
-                    setOpen(false)
-                  }}
-                >
-                  {String(option[optionLabel])}
-                  <Check
-                    className={cn(
-                      "ml-auto h-4 w-4",
-                      String(value) === String(option[optionValue]) ? "opacity-100" : "opacity-0"
-                    )}
-                  />
-                </CommandItem>
-              ))}
+              {options?.map((option, index) => {
+                const optionValueStr = String(option[optionValue])
+                const optionLabelStr = String(option[optionLabel])
+
+                return (
+                  <CommandItem
+                    key={index}
+                    value={optionLabelStr} // Use label for search
+                    onSelect={() => {
+                      // Use the actual option value for onChange
+                      const newValue = optionValueStr === String(value) ? "" : option[optionValue]
+                      onChange(newValue as T[keyof T] | "")
+                      setOpen(false)
+                    }}
+                  >
+                    {optionLabelStr}
+                    <Check
+                      className={cn(
+                        "ml-auto h-4 w-4",
+                        String(value) === optionValueStr ? "opacity-100" : "opacity-0"
+                      )}
+                    />
+                  </CommandItem>
+                )
+              })}
             </CommandGroup>
           </CommandList>
         </Command>

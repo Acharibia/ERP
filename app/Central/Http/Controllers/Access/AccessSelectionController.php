@@ -8,7 +8,6 @@ use App\Central\Models\Module;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use Inertia\Response;
 
 class AccessSelectionController extends Controller
 {
@@ -19,10 +18,12 @@ class AccessSelectionController extends Controller
     {
         $user = $request->user();
         $activeBusiness = $request->session()->get('active_business');
-        if (!$activeBusiness || !isset($activeBusiness['id'])) {
+
+        if (!$activeBusiness || !isset($activeBusiness->id)) {
             return redirect()->route('business.selection');
         }
-        $businessId = $activeBusiness['id'];
+
+        $businessId = $activeBusiness->id;
 
         $business = Business::with([
             'subscription.package.modules' => function ($query) {
@@ -56,7 +57,6 @@ class AccessSelectionController extends Controller
             ];
         }
 
-
         // Get modules through active subscription
         if ($business->subscription) {
             $modules = $business->subscription->package->modules;
@@ -68,7 +68,6 @@ class AccessSelectionController extends Controller
                     return $user->canAccessModule($module->id, $businessId);
                 });
             }
-
 
             // Format modules for display
             $moduleAccessTypes = $modules->map(function ($module) {
@@ -83,7 +82,6 @@ class AccessSelectionController extends Controller
                 ];
             })->values()->toArray();
             // dd($moduleAccessTypes, $modules);
-
 
             // Add modules to access types
             $accessTypes = array_merge($accessTypes, $moduleAccessTypes);
@@ -102,10 +100,9 @@ class AccessSelectionController extends Controller
      */
     public function select(Request $request): RedirectResponse
     {
-
-
         $user = $request->user();
-        $businessId = $request->session()->get('active_business')['id'];
+        $activeBusiness = $request->session()->get('active_business');
+        $businessId = $activeBusiness->id;
         $business = Business::findOrFail($businessId);
 
         // Check if user has access to this business
@@ -135,13 +132,6 @@ class AccessSelectionController extends Controller
         if ($accessType === 'module') {
             $moduleId = $validated['module_id'];
             $module = Module::findOrFail($moduleId);
-
-
-            \Log::info('Module Redirect Debug', [
-                'module_code' => $module->code,
-                'route_name' => 'modules.' . $module->code . '.dashboard',
-                'route_exists' => \Route::has('modules.' . $module->code . '.dashboard')
-            ]);
 
             // Check if module is available through subscription
             if ($business->subscription) {

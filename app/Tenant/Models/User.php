@@ -8,13 +8,10 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
-use Stancl\Tenancy\Contracts\Syncable;
-use App\Central\Models\User as CentralUser;
-use Stancl\Tenancy\Database\Concerns\ResourceSyncing;
 
-class User extends Authenticatable implements Syncable
+class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable, ResourceSyncing, SoftDeletes, HasRoles;
+    use HasApiTokens, HasFactory, Notifiable, SoftDeletes, HasRoles;
 
     /**
      * The attributes that are mass assignable.
@@ -22,18 +19,15 @@ class User extends Authenticatable implements Syncable
      * @var array<int, string>
      */
     protected $fillable = [
-        'id',
+        'global_id',
         'name',
         'email',
         'password',
         'email_verified_at',
-        'user_type',
         'status',
-        'password_changed_at',
-        'remember_token',
         'last_login_at',
         'last_login_ip',
-        'global_id',
+        'password_changed_at',
     ];
 
     /**
@@ -47,9 +41,9 @@ class User extends Authenticatable implements Syncable
     ];
 
     /**
-     * The attributes that should be cast.
+     * Get the attributes that should be cast.
      *
-     * @var array<string, string>
+     * @return array<string, string>
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
@@ -57,46 +51,6 @@ class User extends Authenticatable implements Syncable
         'last_login_at' => 'datetime',
         'password_changed_at' => 'datetime',
     ];
-
-    /**
-     * Get the global identifier key.
-     */
-    public function getGlobalIdentifierKey()
-    {
-        return $this->getAttribute($this->getGlobalIdentifierKeyName());
-    }
-
-    /**
-     * Get the name of the global identifier key.
-     */
-    public function getGlobalIdentifierKeyName(): string
-    {
-        return 'global_id';
-    }
-
-    /**
-     * Get the name of the central model.
-     */
-    public function getCentralModelName(): string
-    {
-        return CentralUser::class;
-    }
-
-    /**
-     * Get the attributes that should be synced.
-     */
-    public function getSyncedAttributeNames(): array
-    {
-        return [
-            'name',
-            'email',
-            'password',
-            'email_verified_at',
-            'user_type',
-            'status',
-            'password_changed_at',
-        ];
-    }
 
     /**
      * Check if the user is a business admin
@@ -114,5 +68,21 @@ class User extends Authenticatable implements Syncable
         $this->last_login_at = now();
         $this->last_login_ip = $ipAddress;
         $this->save();
+    }
+
+    /**
+     * Check if user is active
+     */
+    public function isActive(): bool
+    {
+        return $this->status === 'active';
+    }
+
+    /**
+     * Get the central user (requires context switching, use sparingly)
+     */
+    public function getCentralUser()
+    {
+        return \App\Central\Models\User::where('global_id', $this->global_id)->first();
     }
 }

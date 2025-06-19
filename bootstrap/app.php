@@ -3,6 +3,7 @@
 use App\Central\Http\Middleware\HandleAppearance;
 use App\Central\Http\Middleware\HandleInertiaRequests;
 use App\Central\Http\Middleware\EnsureActiveBusinessSelected;
+use App\Central\Http\Middleware\InitializeTenancyByUserBusiness;
 use App\Central\Http\Middleware\VerifyAdminAccess;
 use App\Central\Http\Middleware\VerifyModuleAccess;
 use App\Central\Http\Middleware\VerifyResellerAccess;
@@ -31,6 +32,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'verify.reseller' => VerifyResellerAccess::class,
             'verify.module' => VerifyModuleAccess::class,
             'ensure.business' => EnsureActiveBusinessSelected::class,
+            'tenant.user' => InitializeTenancyByUserBusiness::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

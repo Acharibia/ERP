@@ -11,17 +11,14 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
-use App\Tenant\Models\User as TenantUser;
 use Spatie\Permission\Traits\HasRoles;
-use Stancl\Tenancy\Contracts\SyncMaster;
 use Stancl\Tenancy\Database\Concerns\CentralConnection;
-use Stancl\Tenancy\Database\Concerns\ResourceSyncing;
 use Stancl\Tenancy\Database\Models\TenantPivot;
-use Str;
+use Illuminate\Support\Str;
 
-class User extends Authenticatable implements SyncMaster
+class User extends Authenticatable
 {
-    use HasApiTokens, ResourceSyncing, SoftDeletes, HasFactory, Notifiable, HasRoles, CentralConnection;
+    use HasApiTokens, SoftDeletes, HasFactory, Notifiable, HasRoles, CentralConnection;
 
     /**
      * The attributes that are mass assignable.
@@ -29,16 +26,18 @@ class User extends Authenticatable implements SyncMaster
      * @var array<int, string>
      */
     protected $fillable = [
+        'global_id',
         'name',
         'email',
         'password',
+        'email_verified_at',
         'user_type',
         'is_super_admin',
         'reseller_id',
         'status',
         'last_login_at',
         'last_login_ip',
-        'global_id',
+        'password_changed_at',
     ];
 
     /**
@@ -52,74 +51,26 @@ class User extends Authenticatable implements SyncMaster
     ];
 
     /**
-     * Get the tenants that this user belongs to.
-     */
-
-    public function tenants(): BelongsToMany
-    {
-        return $this->belongsToMany(Tenant::class, 'tenant_users', 'global_user_id', 'tenant_id', 'global_id')
-            ->using(TenantPivot::class);
-    }
-
-    /**
-     * Get the name of the tenant model.
-     */
-    public function getTenantModelName(): string
-    {
-        return TenantUser::class;
-    }
-
-    /**
-     * Get the global identifier key.
-     */
-    public function getGlobalIdentifierKey()
-    {
-        return $this->getAttribute($this->getGlobalIdentifierKeyName());
-    }
-
-    /**
-     * Get the name of the global identifier key.
-     */
-    public function getGlobalIdentifierKeyName(): string
-    {
-        return 'global_id';
-    }
-
-    /**
-     * Get the name of the central model.
-     */
-    public function getCentralModelName(): string
-    {
-        return static::class;
-    }
-
-    /**
-     * Get the attributes that should be synced.
-     */
-    public function getSyncedAttributeNames(): array
-    {
-        return [
-            'name',
-            'email',
-            'password',
-            'email_verified_at',
-            'user_type',
-            'status',
-            'password_changed_at',
-        ];
-    }
-
-    /**
-     * The attributes that should be cast.
+     * Get the attributes that should be cast.
      *
-     * @var array<string, string>
+     * @return array<string, string>
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
         'last_login_at' => 'datetime',
+        'password_changed_at' => 'datetime',
         'is_super_admin' => 'boolean',
     ];
+
+    /**
+     * Get the tenants that this user belongs to.
+     */
+    public function tenants(): BelongsToMany
+    {
+        return $this->belongsToMany(Tenant::class, 'tenant_users', 'global_user_id', 'tenant_id', 'global_id')
+            ->using(TenantPivot::class);
+    }
 
     /**
      * Relationship to user profile
@@ -132,7 +83,7 @@ class User extends Authenticatable implements SyncMaster
     /**
      * Get the businesses that belong to the user.
      */
-    public function businesses()
+    public function businesses(): BelongsToMany
     {
         return $this->belongsToMany(Business::class, 'user_businesses')
             ->withPivot('is_primary', 'is_business_admin')
@@ -145,7 +96,6 @@ class User extends Authenticatable implements SyncMaster
     public function primaryBusiness(): BelongsToMany
     {
         return $this->belongsToMany(Business::class, 'user_businesses')
-            ->using(UserBusiness::class)
             ->wherePivot('is_primary', true)
             ->withTimestamps();
     }
@@ -242,7 +192,6 @@ class User extends Authenticatable implements SyncMaster
      */
     public function passwordNeedsChange(): bool
     {
-        // If password was never changed or changed more than 90 days ago
         return !$this->password_changed_at ||
             $this->password_changed_at->addDays(90)->isPast();
     }
@@ -252,12 +201,10 @@ class User extends Authenticatable implements SyncMaster
      */
     public function hasResellerAccess(): bool
     {
-        // Direct reseller access if user_type is 'reseller'
         if ($this->user_type === 'reseller') {
             return true;
         }
 
-        // Check if the user has a reseller_id
         if (!empty($this->reseller_id)) {
             return true;
         }
@@ -270,12 +217,10 @@ class User extends Authenticatable implements SyncMaster
      */
     public function hasAdminAccess(): bool
     {
-        // Super admins have admin access
         if ($this->is_super_admin) {
             return true;
         }
 
-        // Users with user_type 'system_admin' have admin access
         if ($this->user_type === 'system_admin') {
             return true;
         }
@@ -285,31 +230,26 @@ class User extends Authenticatable implements SyncMaster
 
     /**
      * Check if user can access a specific module for a business.
-     *
-     * Note: Actual permission checking should happen within the tenant context
-     * This method only checks if the user is a business admin in the central database
      */
     public function canAccessModule(int $moduleId, int $businessId): bool
     {
-        // Check if user is a business admin (which grants access to all modules)
         return $this->businesses()
             ->where('businesses.id', $businessId)
             ->wherePivot('is_business_admin', true)
             ->exists();
-
-        // Note: Detailed permission checks should be done in the tenant context
-        // using Spatie's permission system after switching to the tenant database
     }
-
 
     /**
      * Get the user's notifications.
      */
-    public function notifications()
+    public function notifications(): HasMany
     {
         return $this->hasMany(UserNotification::class, 'user_id');
     }
 
+    /**
+     * Boot method to auto-generate global_id
+     */
     protected static function boot()
     {
         parent::boot();
@@ -317,9 +257,6 @@ class User extends Authenticatable implements SyncMaster
         static::creating(function ($model) {
             if (empty($model->global_id)) {
                 $model->global_id = (string) Str::uuid();
-
-                // Or simply use the same ID format as your existing IDs
-                // $model->global_user_id = (string) $model->id;
             }
         });
     }

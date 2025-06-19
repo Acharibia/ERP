@@ -7,17 +7,16 @@ use Stancl\Tenancy\Database\Models\Tenant as BaseTenant;
 use Stancl\Tenancy\Contracts\TenantWithDatabase;
 use Stancl\Tenancy\Database\Concerns\HasDatabase;
 use Stancl\Tenancy\Database\Concerns\HasDomains;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Stancl\Tenancy\Database\Models\TenantPivot;
 use App\Central\Models\User as CentralUser;
-use Str;
 
 class Tenant extends BaseTenant implements TenantWithDatabase
 {
     use HasDatabase, HasDomains, CentralConnection;
+
     protected $fillable = [
         'id',
-        'business_id',
         'data',
     ];
 
@@ -25,47 +24,36 @@ class Tenant extends BaseTenant implements TenantWithDatabase
         'data' => 'array',
     ];
 
-
+    /**
+     * Get the users that belong to this tenant.
+     */
     public function users()
     {
         return $this->belongsToMany(CentralUser::class, 'tenant_users', 'tenant_id', 'global_user_id', 'id', 'global_id')
             ->using(TenantPivot::class);
     }
 
-    public function business(): BelongsTo
+    /**
+     * Get the business associated with this tenant
+     */
+    public function business(): HasOne
     {
-        return $this->belongsTo(Business::class);
+        return $this->hasOne(Business::class, 'tenant_id');
     }
 
     /**
-     * Create a tenant for the given business
-     *
-     * @param Business $business
-     * @param string|null $domain
-     * @return self
+     * Get business name from data or relationship
      */
-    public static function createForBusiness(Business $business, ?string $domain = null): self
+    public function getBusinessNameAttribute(): ?string
     {
-        // Create a more unique tenant ID
-        $tenantId = Str::slug($business->name);
+        return $this->data['business_name'] ?? $this->business?->name;
+    }
 
-        // Use updateOrCreate to ensure unique tenant creation
-        $tenant = static::updateOrCreate(
-            ['id' => $tenantId],
-            [
-                'id' => $tenantId,
-                'business_id' => $business->id,
-                'business_name' => $business->name,
-            ]
-        );
-
-        if ($domain) {
-            // Check if the domain already exists for this tenant
-            if (!$tenant->domains()->where('domain', $domain)->exists()) {
-                $tenant->domains()->create(['domain' => $domain]);
-            }
-        }
-
-        return $tenant;
+    /**
+     * Get business email from data or relationship
+     */
+    public function getBusinessEmailAttribute(): ?string
+    {
+        return $this->data['business_email'] ?? $this->business?->email;
     }
 }

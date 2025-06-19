@@ -1,21 +1,8 @@
 <?php
 
 namespace Database\Seeders;
-use Database\Seeders\Central\AdminUserSeeder;
-use Database\Seeders\Central\BusinessSeeder;
-use Database\Seeders\Central\CountrySeeder;
-use Database\Seeders\Central\GenderSeeder;
-use Database\Seeders\Central\IndustrySeeder;
-use Database\Seeders\Central\ModuleSeeder;
-use Database\Seeders\Central\NotificationTemplatesSeeder;
-use Database\Seeders\Central\PackageSeeder;
-use Database\Seeders\Central\PermissionSeeder;
-use Database\Seeders\Central\ResellerSeeder;
-use Database\Seeders\Central\StateSeeder;
-use Database\Seeders\Central\TitleSeeder;
-use Database\Seeders\Module\Core\CoreSeeder;
+
 use Illuminate\Database\Seeder;
-use Illuminate\Notifications\Notification;
 
 class DatabaseSeeder extends Seeder
 {
@@ -25,18 +12,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            CountrySeeder::class,
-            StateSeeder::class,
-            GenderSeeder::class,
-            TitleSeeder::class,
-            IndustrySeeder::class,
-            ResellerSeeder::class,
-            AdminUserSeeder::class,
-            ModuleSeeder::class,
-            PackageSeeder::class,
-            BusinessSeeder::class,
-            PermissionSeeder::class,
-            NotificationTemplatesSeeder::class,
+            Central\DatabaseSeeder::class,
         ]);
     }
 }

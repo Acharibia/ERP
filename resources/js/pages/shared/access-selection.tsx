@@ -30,7 +30,7 @@ interface AccessSelectionProps {
     accessTypes: AccessType[];
 }
 
-export default function AccessSelection({ business, accessTypes }: AccessSelectionProps) {
+export default function AccessSelection({ accessTypes }: AccessSelectionProps) {
     // Module configuration with icons and display names
     const moduleConfig: Record<ModuleType, ModuleInfo> = {
         core: {
@@ -81,7 +81,7 @@ export default function AccessSelection({ business, accessTypes }: AccessSelecti
     };
 
     return (
-        <SelectionLayout title="Select Access" description="Choose how to access this business" businessName={business.name}>
+        <SelectionLayout title="Module Access" description="Choose how to access this business">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:grid-cols-5">
                 {accessTypes.map((access, index) => (
                     <Link

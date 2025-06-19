@@ -65,6 +65,7 @@ class DataTableController extends Controller
                 "App\\Admins\\DataTables\\{$dataTable}",
                 "App\\Reseller\\DataTables\\{$dataTable}",
                 "App\\Business\\DataTables\\{$dataTable}",
+                "App\\Tenant\\Modules\\HR\\DataTables\\{$dataTable}",
             ];
 
             foreach ($possibleNamespaces as $fullyQualifiedClassName) {

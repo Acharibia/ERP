@@ -17,12 +17,17 @@ return new class extends Migration {
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->string('user_type'); // 'system_admin', 'reseller', 'business_user'
-            $table->boolean('is_super_admin')->default(false);
             $table->string('status')->default('active'); // 'active', 'inactive', 'suspended'
+            $table->timestamp('last_login_at')->nullable();
+            $table->string('last_login_ip', 45)->nullable();
+            $table->timestamp('password_changed_at')->nullable();
             $table->rememberToken();
             $table->timestamps();
             $table->softDeletes();
+
+            $table->index('global_id');
+            $table->index('email');
+            $table->index('status');
         });
     }
 

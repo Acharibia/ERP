@@ -27,6 +27,15 @@ export interface Badge {
     color: string;
 }
 
+export interface StaticHeader {
+    key: string;
+    title: string;
+    sortable?: boolean;
+    className?: string;
+    type?: 'text' | 'badge' | 'actions' | 'checkbox' | 'date';
+    visible?: boolean;
+}
+
 /**
  * Action item for rendering action buttons/links
  */

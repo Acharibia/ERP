@@ -52,6 +52,9 @@ class BusinessSelectionController extends Controller
             }
         ])->findOrFail($businessId);
 
+
+        dd($business);
+
         // Set the active business in session
         $request->session()->put('active_business', $business);
 

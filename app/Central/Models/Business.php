@@ -16,12 +16,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Stancl\Tenancy\Database\Concerns\CentralConnection;
+use Illuminate\Support\Str;
 
 class Business extends Model
 {
     use HasFactory, CentralConnection;
 
     protected $fillable = [
+        'tenant_id',
         'name',
         'registration_number',
         'email',
@@ -35,8 +37,8 @@ class Business extends Model
         'country_id',
         'industry_id',
         'reseller_id',
-        'subscription_status', // active, trial, suspended, cancelled
-        'environment',         // production, staging, development
+        'subscription_status',
+        'environment',
         'notes',
     ];
 
@@ -49,9 +51,9 @@ class Business extends Model
     /**
      * Get the tenant associated with this business
      */
-    public function tenant(): HasOne
+    public function tenant(): BelongsTo
     {
-        return $this->hasOne(Tenant::class);
+        return $this->belongsTo(Tenant::class, 'tenant_id');
     }
 
     /**
@@ -131,9 +133,6 @@ class Business extends Model
             ->withTimestamps();
     }
 
-    /**
-     * Get only active modules (excluding trial-only when not in trial)
-     */
     /**
      * Get active modules for this business
      */
@@ -287,6 +286,7 @@ class Business extends Model
     /************************************************************
      * BUSINESS METHODS
      ************************************************************/
+
     /**
      * Create a business and its associated tenant
      *
@@ -296,16 +296,28 @@ class Business extends Model
      */
     public static function createWithTenant(array $businessData, ?string $domain = null): self
     {
-        $business = static::updateOrCreate(
-            ['email' => $businessData['email']],
-            $businessData
-        );
+        // Step 1: Create tenant first
+        $tenantId = Str::slug($businessData['name']) . '-' . Str::random(6);
 
-        Tenant::createForBusiness($business, $domain);
+        $tenant = Tenant::create([
+            'id' => $tenantId,
+            'data' => [
+                'business_name' => $businessData['name'],
+                'business_email' => $businessData['email'],
+            ]
+        ]);
+
+        // Step 2: Create business with tenant_id
+        $businessData['tenant_id'] = $tenant->id;
+        $business = static::create($businessData);
+
+        // Step 3: Create domain if provided
+        if ($domain) {
+            $tenant->domains()->create(['domain' => $domain]);
+        }
 
         return $business;
     }
-
 
     /**
      * Check if this business has access to a specific module

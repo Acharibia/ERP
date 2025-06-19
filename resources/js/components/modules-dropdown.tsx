@@ -22,7 +22,7 @@ export function ModulesDropdown() {
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="relative">
-                    <Package className="h-5 w-5" />
+                    <Package />
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-72">

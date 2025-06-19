@@ -16,11 +16,16 @@ export interface NavGroup {
     items: NavItem[];
 }
 
-export interface NavItem {
+interface NavItem {
     title: string;
     url: string;
-    icon?: LucideIcon | null;
+    icon?: LucideIcon;
     isActive?: boolean;
+    style?: 'collapsible' | 'dropdown';
+    items?: {
+        title: string;
+        url: string;
+    }[];
 }
 
 export interface SharedData {
@@ -38,7 +43,7 @@ export interface SharedData {
         error?: string;
         message?: string;
         validation?: unknown;
-      };
+    };
 }
 
 export interface User {
@@ -158,3 +163,44 @@ export type Industry = {
     parent_id: string | null;
     is_active: boolean;
 };
+
+
+
+export interface LeaveType {
+    id: number;
+    name: string;
+    code: string;
+    color: string; // For badge styling
+    maxDays?: number; // Optional limit per year
+    requiresApproval: boolean;
+    carryOver: boolean; // Can unused days carry over?
+    description?: string;
+    isActive: boolean;
+}
+
+export interface LeaveRequest {
+    id: number;
+    employee: {
+        name: string;
+        initials: string;
+        avatar?: string;
+        department: string;
+    };
+    leaveType: LeaveType; // Now an object instead of string
+    status: 'pending' | 'approved' | 'rejected' | 'ongoing' | 'completed';
+    startDate: string;
+    endDate: string;
+    days: number;
+    reason: string;
+    appliedDate: string;
+    approver: {
+        name: string;
+        initials: string;
+    } | null;
+    priority: 'low' | 'normal' | 'high' | 'urgent';
+}
+
+
+export * from './employee';
+export * from './department';
+export * from './position';

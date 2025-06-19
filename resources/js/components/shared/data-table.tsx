@@ -22,27 +22,48 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import * as lucideIcons from 'lucide-react';
 
 import { useDataTable } from '@/hooks/use-data-table';
-import { BaseRowData } from '@/types/data-table';
+import { BaseRowData, StaticHeader } from '@/types/data-table';
+import { EmptyState } from '../empty-state';
 import { Badge } from '../ui/badge';
 import { Checkbox } from '../ui/checkbox';
 import { DataTableColumnHeader } from './data-table-column-header';
 import { DataTablePagination } from './data-table-pagination';
 import { DataTableToolbar } from './data-table-toolbar';
+import { TableLoading } from './table-loading';
 
 // Fixed type for icon lookup
 type LucideIcon = keyof typeof lucideIcons;
 
+interface DataTableRoutes {
+    process: string; // Route name for processing data
+    filterOptions?: string; // Route name for getting filter options
+    export?: string; // Route name for exporting data
+}
+
 interface DataTableProps<T extends BaseRowData> {
     dataTableClass: string;
+    routes: DataTableRoutes;
     initialVisibility?: VisibilityState;
     onRowAction?: (action: string, row: T) => void;
     enableRowClick?: boolean;
+    preserveStateKey?: string;
+    staticHeaders?: StaticHeader[];
 }
 
-export function DataTable<T extends BaseRowData>({ dataTableClass, initialVisibility = {}, onRowAction, enableRowClick = true }: DataTableProps<T>) {
-    // Use the data table hook
-    const { data, columns, isLoading, error, fetchData, filterOptions } = useDataTable<T>({
+export function DataTable<T extends BaseRowData>({
+    dataTableClass,
+    routes,
+    initialVisibility = {},
+    onRowAction,
+    enableRowClick = true,
+    preserveStateKey,
+    staticHeaders,
+}: DataTableProps<T>) {
+    // Use the data table hook with routes
+    const { data, columns, isLoading, error, fetchData, filterOptions, exportData, fetchFilterOptions } = useDataTable<T>({
         dataTableClass,
+        routes,
+        preserveStateKey,
     });
 
     // Other table state
@@ -50,20 +71,51 @@ export function DataTable<T extends BaseRowData>({ dataTableClass, initialVisibi
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
     const [sorting, setSorting] = React.useState<SortingState>([]);
 
-    // Initialize column visibility based on server columns
-    // This will re-initialize whenever columns change (after data fetch)
+    // Create initial columns from staticHeaders if provided
+    const getInitialColumns = React.useCallback(() => {
+        if (!staticHeaders) return [];
+
+        return staticHeaders.map((header) => ({
+            data: header.key,
+            name: header.key,
+            title: header.title,
+            visible: header.visible !== false,
+            searchable: true,
+            orderable: header.sortable !== false,
+            type: header.type || 'text',
+            className: header.className || null,
+        }));
+    }, [staticHeaders]);
+
+    // Use either server columns or static headers as fallback
+    const effectiveColumns = React.useMemo(() => {
+        // If we have server columns, use those
+        if (columns && columns.length > 0) {
+            return columns;
+        }
+
+        // Otherwise, use static headers if available
+        if (staticHeaders && staticHeaders.length > 0) {
+            return getInitialColumns();
+        }
+
+        // No columns available
+        return [];
+    }, [columns, staticHeaders, getInitialColumns]);
+
+    // Initialize column visibility based on effective columns
     const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
 
-    // Update visibility when columns change from server
+    // Update visibility when effective columns change
     React.useEffect(() => {
-        if (columns && columns.length > 0) {
+        if (effectiveColumns && effectiveColumns.length > 0) {
             const visibilityState: VisibilityState = {};
-            columns.forEach((col) => {
+            effectiveColumns.forEach((col) => {
                 visibilityState[col.data] = col.visible !== false;
             });
             setColumnVisibility(visibilityState);
         }
-    }, [columns]);
+    }, [effectiveColumns]);
 
     // Handle row actions
     const handleAction = React.useCallback(
@@ -87,11 +139,22 @@ export function DataTable<T extends BaseRowData>({ dataTableClass, initialVisibi
         [enableRowClick, onRowAction],
     );
 
+    // Helper function to get value from row data
+    const getRowValue = React.useCallback((row: any, columnKey: string) => {
+        // For dot notation keys, access as flat key
+        if (columnKey.includes('.')) {
+            return row.original[columnKey];
+        }
+        // For regular keys, use TanStack's getValue
+        return row.getValue(columnKey);
+    }, []);
+
     // Convert server columns to Tanstack columns
     const tableColumns = React.useMemo<ColumnDef<T, unknown>[]>(
         () =>
-            columns.map((col) => {
-                // Special handling for select column
+            effectiveColumns.map((col) => {
+                const hasDotNotation = col.data.includes('.');
+
                 if (col.data === 'select') {
                     return {
                         id: 'select',
@@ -174,10 +237,11 @@ export function DataTable<T extends BaseRowData>({ dataTableClass, initialVisibi
                 if (col.type === 'badge') {
                     return {
                         id: col.data,
-                        accessorKey: col.data,
+                        // Use accessorFn for dot notation, accessorKey for regular columns
+                        ...(hasDotNotation ? { accessorFn: (row: any) => row[col.data] } : { accessorKey: col.data }),
                         header: col.title,
                         cell: ({ row }) => {
-                            const value = row.getValue(col.data) as string;
+                            const value = getRowValue(row, col.data) as string;
 
                             // Support both old and new format
                             const badgeConfig = col.badgeConfig || {};
@@ -224,18 +288,18 @@ export function DataTable<T extends BaseRowData>({ dataTableClass, initialVisibi
                 // Default column handling
                 return {
                     id: col.data,
-                    accessorKey: col.data,
+                    ...(hasDotNotation ? { accessorFn: (row: any) => row[col.data] } : { accessorKey: col.data }),
                     header: ({ column }) => <DataTableColumnHeader column={column} title={col.title} onSortChange={() => fetchData()} />,
                     meta: { title: col.title },
                     cell: ({ row }) => {
-                        const value = row.getValue(col.data);
+                        const value = getRowValue(row, col.data);
                         return <div className={col.className || ''}>{value as React.ReactNode}</div>;
                     },
                     enableSorting: col.orderable !== false,
                     enableHiding: true,
                 };
             }),
-        [columns, handleAction, fetchData],
+        [effectiveColumns, handleAction, fetchData, getRowValue],
     );
 
     // Create table instance
@@ -244,7 +308,7 @@ export function DataTable<T extends BaseRowData>({ dataTableClass, initialVisibi
         columns: tableColumns,
         state: {
             sorting,
-            columnVisibility, // Use our state that's initialized from server config
+            columnVisibility,
             rowSelection,
             columnFilters,
         },
@@ -265,19 +329,65 @@ export function DataTable<T extends BaseRowData>({ dataTableClass, initialVisibi
         getFacetedUniqueValues: getFacetedUniqueValues(),
     });
 
-    // Loading state component
-    if (isLoading) {
-        return <div className="p-4 text-center">Loading...</div>;
+    // Only show full loading if we don't have any columns at all (no static headers either)
+    const shouldShowFullLoading = isLoading && effectiveColumns.length === 0;
+
+    // Loading state component - only show full loading if we don't have any columns at all
+    if (shouldShowFullLoading) {
+        return (
+            <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                    <div className="flex flex-1 items-center space-x-2">
+                        <div className="bg-muted h-8 w-[250px] animate-pulse rounded"></div>
+                        <div className="bg-muted h-8 w-20 animate-pulse rounded"></div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <div className="bg-muted h-8 w-16 animate-pulse rounded"></div>
+                        <div className="bg-muted h-8 w-16 animate-pulse rounded"></div>
+                    </div>
+                </div>
+                <div className="rounded-md border">
+                    <div className="p-8 text-center">
+                        <div className="flex items-center justify-center space-x-2">
+                            <div className="border-primary h-6 w-6 animate-spin rounded-full border-b-2"></div>
+                            <span className="text-muted-foreground">Loading table...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
     }
 
     // Error state component
     if (error) {
-        return <div className="p-4 text-center text-red-500">Error: {error.message}</div>;
+        return (
+            <div className="space-y-4">
+                <div className="rounded-md border">
+                    <div className="p-8 text-center">
+                        <div className="text-red-500">
+                            <lucideIcons.AlertCircle className="mx-auto mb-2 h-8 w-8" />
+                            <p className="font-medium">Error loading table</p>
+                            <p className="text-muted-foreground mt-1 text-sm">{error.message}</p>
+                            <Button variant="outline" size="sm" onClick={() => fetchData(true)} className="mt-4">
+                                <lucideIcons.RefreshCw className="mr-2 h-4 w-4" />
+                                Retry
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
     }
 
     return (
         <div className="space-y-4">
-            <DataTableToolbar table={table} filterOptions={filterOptions} dataTableClass={dataTableClass} />
+            <DataTableToolbar
+                table={table}
+                filterOptions={filterOptions}
+                dataTableClass={dataTableClass}
+                onExport={exportData}
+                onRefreshFilters={fetchFilterOptions}
+            />
             <div className="rounded-md border">
                 <Table className="table-auto">
                     <TableHeader>
@@ -292,7 +402,10 @@ export function DataTable<T extends BaseRowData>({ dataTableClass, initialVisibi
                         ))}
                     </TableHeader>
                     <TableBody>
-                        {table.getRowModel().rows?.length ? (
+                        {isLoading ? (
+                            // Show skeleton loading in table body while keeping headers
+                            <TableLoading columnCount={tableColumns.length} />
+                        ) : table.getRowModel().rows?.length ? (
                             table.getRowModel().rows.map((row) => (
                                 <TableRow
                                     key={row.id}
@@ -307,8 +420,14 @@ export function DataTable<T extends BaseRowData>({ dataTableClass, initialVisibi
                             ))
                         ) : (
                             <TableRow>
-                                <TableCell colSpan={tableColumns.length} className="h-24 text-center">
-                                    No results.
+                                <TableCell colSpan={tableColumns.length} className="p-0">
+                                    <EmptyState
+                                        icon={lucideIcons.Search}
+                                        iconSize="h-12 w-12"
+                                        title="No results found"
+                                        description="Try adjusting your search or filter criteria to find what you're looking for."
+                                        className="py-8"
+                                    />
                                 </TableCell>
                             </TableRow>
                         )}

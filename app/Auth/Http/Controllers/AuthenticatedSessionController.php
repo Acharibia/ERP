@@ -63,6 +63,8 @@ class AuthenticatedSessionController extends Controller
         } elseif ($businesses->count() === 1) {
             // If user has just one business, set it as the active business
             $business = $businesses->first();
+
+            // dd($business->tenant);
             $request->session()->put('active_business', $business);
             if ($business->subscription) {
                 $request->session()->put('available_modules', $business->subscription->package->modules);

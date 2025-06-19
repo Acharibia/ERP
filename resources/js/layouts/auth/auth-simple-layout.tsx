@@ -11,7 +11,7 @@ interface AuthLayoutProps {
 export default function AuthSimpleLayout({ children, title, description }: PropsWithChildren<AuthLayoutProps>) {
     return (
         <div className="bg-background flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
-            <div className="mx-auto w-full flex items-center justify-center">
+            <div className="mx-auto flex w-full items-center justify-center">
                 <div className="flex flex-col gap-8">
                     <div className="flex flex-col items-center gap-4">
                         <Link href={'/'} className="flex flex-col items-center gap-2 font-medium">

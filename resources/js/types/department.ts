@@ -1,6 +1,5 @@
 // @/types/department.d.ts
 import { Employee, EmployeeBasic } from './employee';
-import { type StaticHeader } from '@/types/data-table';
 
 export type DepartmentPerformance = 'excellent' | 'good' | 'average' | 'needs_attention';
 export type DepartmentStatus = 'active' | 'inactive';
@@ -38,7 +37,6 @@ export interface Department {
 export interface DepartmentBasic {
     id: number;
     name: string;
-    code: string | null;
     status: DepartmentStatus;
     [key: string]: unknown;
 }
@@ -66,55 +64,3 @@ export interface DepartmentWithManager extends DepartmentBasic {
     location?: string;
 }
 
-// Static headers for Department DataTable
-export const DepartmentStaticHeaders: StaticHeader[] = [
-    {
-        key: 'select',
-        title: '',
-        sortable: false,
-        visible: true,
-        type: 'checkbox',
-    },
-    {
-        key: 'id',
-        title: 'ID',
-        sortable: true,
-        className: 'font-medium',
-        visible: false, // Hidden by default as per DataTable
-        type: 'text',
-    },
-    {
-        key: 'name',
-        title: 'Name',
-        sortable: true,
-        className: 'font-medium',
-        type: 'text',
-    },
-    {
-        key: 'description',
-        title: 'Description',
-        sortable: true,
-        className: 'text-muted-foreground',
-        type: 'text',
-    },
-    {
-        key: 'status',
-        title: 'Status',
-        sortable: true,
-        type: 'badge',
-    },
-    {
-        key: 'created_at',
-        title: 'Date Created',
-        sortable: true,
-        type: 'date',
-        className: 'text-sm text-muted-foreground',
-    },
-    {
-        key: 'actions',
-        title: 'Actions',
-        sortable: false,
-        type: 'actions',
-        className: 'w-[70px]',
-    },
-];

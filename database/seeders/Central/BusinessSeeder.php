@@ -2,6 +2,7 @@
 
 namespace Database\Seeders\Central;
 
+use App\Central\Enums\SubscriptionStatus;
 use App\Central\Models\Business;
 use App\Central\Models\Industry;
 use App\Central\Models\Package;
@@ -9,8 +10,7 @@ use App\Central\Models\Reseller;
 use App\Central\Models\UserProfile;
 use App\Central\Services\SubscriptionService;
 use App\Central\Services\UserService;
-use App\Support\Enums\SubscriptionStatus;
-use App\Support\Enums\UserType;
+use App\Central\Enums\UserType;
 use Illuminate\Database\Seeder;
 
 class BusinessSeeder extends Seeder

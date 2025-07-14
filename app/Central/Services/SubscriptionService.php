@@ -6,7 +6,7 @@ use App\Central\Models\Business;
 use App\Central\Models\Module;
 use App\Central\Models\Subscription;
 use App\Central\Models\Package;
-use App\Support\Enums\SubscriptionStatus;
+use App\Central\Enums\SubscriptionStatus;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 

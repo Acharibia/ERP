@@ -18,9 +18,9 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Stancl\Tenancy\Database\Concerns\CentralConnection;
 use Illuminate\Support\Str;
 
-class Business extends Model
+class Business extends CentralModel
 {
-    use HasFactory, CentralConnection;
+    use HasFactory;
 
     protected $fillable = [
         'tenant_id',

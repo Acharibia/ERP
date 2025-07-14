@@ -1,7 +1,9 @@
 <?php
 
 namespace Database\Seeders\Tenant;
-use Database\Seeders\Tenant\PermissionSeeder;
+
+use Database\Seeders\Tenant\Module\Core\CoreSeeder;
+use Database\Seeders\Tenant\Module\HR\HRSeeder;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -12,7 +14,8 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            PermissionSeeder::class,
+            CoreSeeder::class,
+            HRSeeder::class,
         ]);
     }
 }

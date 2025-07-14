@@ -4,10 +4,11 @@ namespace App\Tenant\Modules\HR\Models;
 
 use App\Tenant\Modules\HR\Enum\EmploymentType;
 use App\Tenant\Modules\HR\Enum\PositionLevel;
+use App\Tenant\Modules\HR\Enum\PositionStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Position extends Model
 {
@@ -30,7 +31,7 @@ class Position extends Model
         'max_salary' => 'decimal:2',
         'employment_type' => EmploymentType::class,
         'position_level' => PositionLevel::class,
-        'status' => 'string',
+        'status' => PositionStatus::class,
     ];
 
     protected $appends = [
@@ -44,16 +45,23 @@ class Position extends Model
         return $this->belongsTo(Department::class);
     }
 
-    public function employees(): HasMany
+    public function employees(): HasManyThrough
     {
-        return $this->hasMany(Employee::class);
+        return $this->hasManyThrough(
+            Employee::class,
+            EmployeeEmploymentInfo::class,
+            'position_id',
+            'id',
+            'id',
+            'employee_id'
+        );
     }
 
     // Computed attributes
     protected function employeeCount(): Attribute
     {
         return Attribute::make(
-            get: fn() => $this->employees()->where('is_active', true)->count()
+            get: fn() => $this->employees()->active()->count()
         );
     }
 
@@ -78,7 +86,12 @@ class Position extends Model
     // Scopes
     public function scopeActive($query)
     {
-        return $query->where('status', 'active');
+        return $query->where('status', PositionStatus::ACTIVE);
+    }
+
+    public function scopeInActive($query)
+    {
+        return $query->where('status', PositionStatus::INACTIVE);
     }
 
     public function scopeByDepartment($query, $departmentId)

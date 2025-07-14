@@ -18,12 +18,13 @@ return new class extends Migration {
             $table->date('end_date');
             $table->decimal('total_days', 5, 1);
             $table->text('reason')->nullable();
+            $table->string('priority')->default('normal'); // low, normal, high, urgent
             $table->string('status')->default('pending'); // pending, approved, rejected, cancelled
-            $table->foreignId('approved_by')->nullable(); // Reference to central users table
-            $table->dateTime('approved_at')->nullable();
-            $table->text('rejection_reason')->nullable();
-            $table->string('attachment_path')->nullable();
+            $table->foreignId('reviewed_by')->nullable();
+            $table->dateTime('reviewed_at')->nullable();
+            $table->text('comment')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

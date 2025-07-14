@@ -3,13 +3,11 @@
 namespace App\Central\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Stancl\Tenancy\Database\Concerns\CentralConnection;
 
-class Gender extends Model
+class Gender extends CentralModel
 {
-    use HasFactory, CentralConnection;
+    use HasFactory;
 
     /**
      * The attributes that are mass assignable.
@@ -37,5 +35,10 @@ class Gender extends Model
     public function users(): HasMany
     {
         return $this->hasMany(User::class);
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
     }
 }

@@ -15,10 +15,12 @@ use Spatie\Permission\Traits\HasRoles;
 use Stancl\Tenancy\Database\Concerns\CentralConnection;
 use Stancl\Tenancy\Database\Models\TenantPivot;
 use Illuminate\Support\Str;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
-class User extends Authenticatable
+class User extends Authenticatable implements HasMedia
 {
-    use HasApiTokens, SoftDeletes, HasFactory, Notifiable, HasRoles, CentralConnection;
+    use HasApiTokens, SoftDeletes, HasFactory, Notifiable, HasRoles, CentralConnection, InteractsWithMedia;
 
     /**
      * The attributes that are mass assignable.
@@ -62,6 +64,11 @@ class User extends Authenticatable
         'password_changed_at' => 'datetime',
         'is_super_admin' => 'boolean',
     ];
+
+    public function getProfilePictureUrlAttribute(): ?string
+    {
+        return $this->getFirstMediaUrl('profile_picture') ?: null;
+    }
 
     /**
      * Get the tenants that this user belongs to.

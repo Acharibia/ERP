@@ -6,21 +6,13 @@ use App\Central\Models\Tenant;
 use App\Central\Models\User as CentralUser;
 use App\Tenant\Models\User as TenantUser;
 use App\Central\Models\Business;
-use App\Support\Enums\UserType;
+use App\Central\Enums\UserType;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
-use Stancl\Tenancy\Tenancy;
 
 class UserService
 {
-    protected $tenancy;
-
-    public function __construct(Tenancy $tenancy)
-    {
-        $this->tenancy = $tenancy;
-    }
-
     /**
      * Create a new user in the central database
      */
@@ -48,10 +40,8 @@ class UserService
      */
     public function createAndSync(array $userData, UserType $userType, array $businessIds = []): CentralUser
     {
-        // Create the user in the central database
         $user = $this->create($userData, $userType);
 
-        // Sync user to specified businesses if any
         if (!empty($businessIds)) {
             $this->syncToBusinesses($user, $businessIds);
         }
@@ -65,110 +55,124 @@ class UserService
     public function syncToBusinesses(CentralUser $user, array $businessIds): void
     {
         foreach ($businessIds as $businessId) {
-            $business = Business::query()->where('id', $businessId)->first();
-
-            if (!$business) {
-                throw new \Exception("Business with ID {$businessId} not found");
-            }
-
+            $business = Business::findOrFail($businessId);
             $this->syncToBusiness($user, $business);
         }
     }
 
+
     /**
      * Sync a user to a specific business
-     * FIXED: Don't create new tenants if business already has one
      */
-    public function syncToBusiness(CentralUser $user, $business): void
+    public function syncToBusiness(CentralUser $user, Business $business): void
     {
-        $businessModel = $business instanceof Business
-            ? $business
-            : Business::findOrFail($business);
-
-        // CRITICAL FIX: Check tenant_id first, then load relationship
-        if (!$businessModel->tenant_id) {
-            throw new \Exception("Business {$businessModel->name} does not have a tenant. This should not happen if business was created properly.");
+        if (!$business->tenant_id || !$business->tenant) {
+            throw new \Exception("Business {$business->name} is missing a valid tenant.");
         }
 
-        // Load the tenant relationship (this should work since tenant_id exists)
-        $tenant = $businessModel->tenant;
+        // Create tenant user (assumes already in tenant context)
+        $this->createTenantUser($user);
 
-        if (!$tenant) {
-            throw new \Exception("Business {$businessModel->name} has tenant_id but tenant not found. Data integrity issue.");
-        }
-
-        // Create user in tenant database
-        $this->createTenantUser($user, $tenant);
-
-        // Attach user to tenant in central database if not already attached
-        if (!$user->tenants()->where('tenant_id', $tenant->id)->exists()) {
-            $user->tenants()->attach($tenant->id);
-        }
+        // Attach relationships in central DB
+        $user->tenants()->syncWithoutDetaching([$business->tenant->id]);
+        $user->businesses()->syncWithoutDetaching([$business->id]);
     }
 
     /**
-     * Create a tenant user (user record in the tenant database)
+     * Create a tenant user assuming tenant context is already active
      */
-    protected function createTenantUser(CentralUser $user, Tenant $tenant): ?TenantUser
+    protected function createTenantUser(CentralUser $user): TenantUser
     {
-        // Initialize tenant context
-        tenancy()->initialize($tenant);
-
-        // Try to find existing user first
-        $existingTenantUser = TenantUser::where('email', $user->email)->first();
-
-        // If user doesn't exist, create a new one with only tenant-relevant fields
-        if (!$existingTenantUser) {
-            $tenantUser = TenantUser::create([
+        return TenantUser::firstOrCreate(
+            ['email' => $user->email],
+            [
                 'global_id' => $user->global_id,
                 'name' => $user->name,
-                'email' => $user->email,
-                'password' => $user->password, // Already hashed
+                'password' => $user->password, // already hashed
                 'email_verified_at' => $user->email_verified_at,
                 'status' => 'active',
-            ]);
-
-            // Always end tenant context
-            tenancy()->end();
-
-            return $tenantUser;
-        }
-
-        // Always end tenant context
-        tenancy()->end();
-
-        return $existingTenantUser;
+            ]
+        );
     }
-
-    // REMOVE this method entirely - it's causing the duplicate tenant creation
-    // protected function createTenantForBusiness(Business $business): Tenant { ... }
 
     /**
-     * Remove a user from a business
+     * Remove a user from a business (assumes tenant context already active)
      */
-    public function removeFromBusiness(CentralUser $user, $business): void
+    public function removeFromBusiness(CentralUser $user, Business $business): void
     {
-        $businessModel = $business instanceof Business
-            ? $business
-            : Business::findOrFail($business);
+        if (!$business->tenant_id || !$business->tenant)
+            return;
 
-        $tenant = $businessModel->tenant;
+        // Remove from tenant DB
+        TenantUser::where('global_id', $user->global_id)->delete();
 
-        if ($tenant) {
-            // Remove from tenant database
-            tenancy()->initialize($tenant);
+        // Remove from central DB relationships
+        $user->tenants()->detach($business->tenant_id);
+        $user->businesses()->detach($business->id);
+    }
 
+    /**
+     * Update user across all tenants
+     */
+    public function updateUserAcrossAllTenants(CentralUser $user, array $updateData): void
+    {
+        $user->update($updateData);
+
+        foreach ($user->tenants as $tenant) {
+            // Let your tenant middleware handle context, or manually switch if needed
             $tenantUser = TenantUser::where('global_id', $user->global_id)->first();
             if ($tenantUser) {
-                $tenantUser->delete();
+                $tenantUser->update(array_intersect_key($updateData, array_flip([
+                    'name',
+                    'email',
+                    'status',
+                    'email_verified_at',
+                ])));
             }
-
-            tenancy()->end();
-
-            // Remove from central tenant relationship
-            $user->tenants()->detach($tenant->id);
         }
     }
+
+    public function findByEmail(string $email): ?CentralUser
+    {
+        return CentralUser::where('email', $email)->first();
+    }
+
+
+    /**
+     * Delete user from all tenants and central DB
+     */
+    public function deleteUserCompletely(CentralUser $user): void
+    {
+        foreach ($user->tenants as $tenant) {
+            TenantUser::where('global_id', $user->global_id)->forceDelete();
+        }
+
+        $user->tenants()->detach();
+        $user->businesses()->detach();
+        $user->forceDelete();
+    }
+
+    /**
+     * Check if user has access to a business
+     */
+    public function hasAccessToBusiness(CentralUser $user, Business $business): bool
+    {
+        return $user->businesses()->where('business_id', $business->id)->exists();
+    }
+
+    /**
+     * Get user roles in tenant context (assumes tenant context is already active)
+     */
+    public function getUserRolesInBusiness(CentralUser $user, Business $business): array
+    {
+        if (!$business->tenant_id || !$business->tenant)
+            return [];
+
+        $tenantUser = TenantUser::where('global_id', $user->global_id)->first();
+
+        return $tenantUser ? $tenantUser->getRoleNames()->toArray() : [];
+    }
+
 
     /**
      * Update a user's role within a specific business
@@ -202,166 +206,11 @@ class UserService
         }
 
         // Update the role
-        // $tenantUser->syncRoles([$roleName]);
+        $tenantUser->syncRoles([$roleName]);
 
         // Always return to central context
         tenancy()->end();
 
         return true;
-    }
-
-    /**
-     * Get all businesses a user is synced with
-     */
-    public function getUserBusinesses(CentralUser $user)
-    {
-        // Get all tenants the user is associated with
-        $tenants = $user->tenants;
-
-        // Get the businesses for those tenants
-        $businesses = collect();
-        foreach ($tenants as $tenant) {
-            if ($tenant->business) {
-                $businesses->push($tenant->business);
-            }
-        }
-
-        return $businesses;
-    }
-
-    /**
-     * Get user in tenant context
-     */
-    public function getTenantUser(CentralUser $user, $business)
-    {
-        $businessModel = $business instanceof Business
-            ? $business
-            : Business::findOrFail($business);
-
-        $tenant = $businessModel->tenant;
-
-        if (!$tenant) {
-            throw new \Exception("Business does not have an associated tenant");
-        }
-
-        // Check if user is synced with this business
-        if (!$user->tenants()->where('tenant_id', $tenant->id)->exists()) {
-            return null;
-        }
-
-        // Switch to tenant context
-        tenancy()->initialize($tenant);
-
-        // Find the user in the tenant database using global_id
-        $tenantUser = TenantUser::where('global_id', $user->global_id)->first();
-
-        // Always return to central context
-        tenancy()->end();
-
-        return $tenantUser;
-    }
-
-    // REMOVE ensureBusinessHasTenant method - it's not needed and causes issues
-
-    /**
-     * Update user information across all tenants
-     */
-    public function updateUserAcrossAllTenants(CentralUser $user, array $updateData): void
-    {
-        // Update central user
-        $user->update($updateData);
-
-        // Update user in all tenant databases
-        $tenants = $user->tenants;
-
-        foreach ($tenants as $tenant) {
-            tenancy()->initialize($tenant);
-
-            $tenantUser = TenantUser::where('global_id', $user->global_id)->first();
-            if ($tenantUser) {
-                // Only update fields that exist in tenant user table
-                $tenantUpdateData = array_intersect_key($updateData, array_flip([
-                    'name',
-                    'email',
-                    'status',
-                    'email_verified_at'
-                ]));
-
-                if (!empty($tenantUpdateData)) {
-                    $tenantUser->update($tenantUpdateData);
-                }
-            }
-
-            tenancy()->end();
-        }
-    }
-
-    /**
-     * Permanently delete a user from all contexts
-     */
-    public function deleteUserCompletely(CentralUser $user): void
-    {
-        // Remove from all tenant databases
-        $tenants = $user->tenants;
-
-        foreach ($tenants as $tenant) {
-            tenancy()->initialize($tenant);
-
-            $tenantUser = TenantUser::where('global_id', $user->global_id)->first();
-            if ($tenantUser) {
-                $tenantUser->forceDelete();
-            }
-
-            tenancy()->end();
-        }
-
-        // Remove tenant relationships
-        $user->tenants()->detach();
-
-        // Remove business relationships
-        $user->businesses()->detach();
-
-        // Delete central user
-        $user->forceDelete();
-    }
-
-    /**
-     * Check if user has access to a specific business
-     */
-    public function hasAccessToBusiness(CentralUser $user, $business): bool
-    {
-        $businessId = $business instanceof Business ? $business->id : $business;
-
-        return $user->businesses()->where('business_id', $businessId)->exists();
-    }
-
-    /**
-     * Get user's role in a specific business
-     */
-    public function getUserRolesInBusiness(CentralUser $user, $business): array
-    {
-        $businessModel = $business instanceof Business
-            ? $business
-            : Business::findOrFail($business);
-
-        $tenant = $businessModel->tenant;
-
-        if (!$tenant) {
-            return [];
-        }
-
-        // Switch to tenant context
-        tenancy()->initialize($tenant);
-
-        $tenantUser = TenantUser::where('global_id', $user->global_id)->first();
-
-        $roles = [];
-        if ($tenantUser) {
-            $roles = $tenantUser->getRoleNames()->toArray();
-        }
-
-        tenancy()->end();
-
-        return $roles;
     }
 }

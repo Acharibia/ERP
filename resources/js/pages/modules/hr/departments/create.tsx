@@ -8,7 +8,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
-import { BreadcrumbItem, DepartmentBasic, DepartmentFormData, EmployeeOption } from '@/types';
+import { BreadcrumbItem, DepartmentBasic, DepartmentFormData, EmployeeBasic } from '@/types';
 import { Head, router, useForm } from '@inertiajs/react';
 import { Save, X } from 'lucide-react';
 
@@ -27,7 +27,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function Create({ departments, employees }: { departments: DepartmentBasic[]; employees: EmployeeOption[] }) {
+export default function Create({ departments, employees }: { departments: DepartmentBasic[]; employees: EmployeeBasic[] }) {
     const { data, setData, post, processing, errors } = useForm<DepartmentFormData>({
         name: '',
         code: '',

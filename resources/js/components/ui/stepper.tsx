@@ -43,15 +43,16 @@ export function useStepperItem() {
 }
 
 /* ----------------------------- Stepper Root ----------------------------- */
-interface StepperProps extends React.HTMLAttributes<HTMLDivElement> {
+interface StepperProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onChange'> {
   value: number;
-  onChange: (step: number) => void;
+  onStepChange: (step: number) => void; // Renamed
   children: React.ReactNode;
 }
 
+
 export function Stepper({
   value,
-  onChange,
+  onStepChange,
   children,
   className,
   ...props
@@ -64,25 +65,25 @@ export function Stepper({
 
   const nextStep = React.useCallback(() => {
     if (value < maxSteps) {
-      onChange(value + 1);
+      onStepChange(value + 1);
     }
-  }, [value, maxSteps, onChange]);
+  }, [value, maxSteps, onStepChange]);
 
   const prevStep = React.useCallback(() => {
     if (value > 1) {
-      onChange(value - 1);
+      onStepChange(value - 1);
     }
-  }, [value, onChange]);
+  }, [value, onStepChange]);
 
   const contextValue = React.useMemo(() => ({
     activeStep: value,
-    setActiveStep: onChange,
+    setActiveStep: onStepChange,
     maxSteps,
     isNextDisabled,
     isPrevDisabled,
     nextStep,
     prevStep
-  }), [value, onChange, maxSteps, isNextDisabled, isPrevDisabled, nextStep, prevStep]);
+  }), [value, onStepChange, maxSteps, isNextDisabled, isPrevDisabled, nextStep, prevStep]);
 
   return (
     <StepperContext.Provider value={contextValue}>
@@ -131,7 +132,7 @@ export function StepperItem({
           className
         )}
         data-state={state}
-        data-disabled={state === "disabled" || undefined}
+        data-disabled={undefined}
         {...props}
       >
         {children}
@@ -141,7 +142,7 @@ export function StepperItem({
 }
 
 /* -------------------------- Stepper Separator -------------------------- */
-interface StepperSeparatorProps extends React.HTMLAttributes<HTMLDivElement> {}
+type StepperSeparatorProps = React.HTMLAttributes<HTMLDivElement>
 
 export function StepperSeparator({ className, ...props }: StepperSeparatorProps) {
     const { state } = useStepperItem();
@@ -196,17 +197,17 @@ export function StepperTrigger({
     );
   }
 
-  if (asChild) {
-    return React.Children.map(children, (child) => {
-      if (!React.isValidElement(child)) return null;
-
-      return React.cloneElement(child as React.ReactElement, {
+    if (asChild) {
+    const child = React.Children.only(children) as React.ReactElement<React.HTMLAttributes<HTMLElement>>;
+    if (!React.isValidElement(child)) return null;
+    return React.cloneElement(child, {
         onClick: handleClick,
         disabled: state === "disabled" || props.disabled,
-        ...props
-      });
+        ...props,
     });
-  }
+    }
+
+
 
   return (
     <button
@@ -222,7 +223,7 @@ export function StepperTrigger({
 }
 
 /* ---------------------------- Stepper Title ---------------------------- */
-interface StepperTitleProps extends React.HTMLAttributes<HTMLHeadingElement> {}
+type StepperTitleProps = React.HTMLAttributes<HTMLHeadingElement>
 
 export function StepperTitle({ className, children, ...props }: StepperTitleProps) {
   const { state } = useStepperItem();
@@ -242,7 +243,7 @@ export function StepperTitle({ className, children, ...props }: StepperTitleProp
 }
 
 /* -------------------------- Stepper Description -------------------------- */
-interface StepperDescriptionProps extends React.HTMLAttributes<HTMLParagraphElement> {}
+type StepperDescriptionProps = React.HTMLAttributes<HTMLParagraphElement>
 
 export function StepperDescription({ className, children, ...props }: StepperDescriptionProps) {
   const { state } = useStepperItem();
@@ -262,7 +263,7 @@ export function StepperDescription({ className, children, ...props }: StepperDes
 }
 
 /* -------------------------- Stepper Indicator -------------------------- */
-interface StepperIndicatorProps extends React.HTMLAttributes<HTMLDivElement> {}
+type StepperIndicatorProps = React.HTMLAttributes<HTMLDivElement>
 
 export function StepperIndicator({ className, children, ...props }: StepperIndicatorProps) {
   const { state, icon: Icon } = useStepperItem(); // Get icon from context

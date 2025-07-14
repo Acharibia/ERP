@@ -3,7 +3,7 @@ import { Transition } from '@headlessui/react';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { FormEventHandler } from 'react';
 
-import DeleteUser from '@/components/delete-user';
+import ConfirmActionDialog from '@/components/confirm-action-dialog';
 import HeadingSmall from '@/components/heading-small';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
@@ -120,7 +120,37 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                     </form>
                 </div>
 
-                <DeleteUser />
+                <div className="space-y-6">
+                    <HeadingSmall title="Delete account" description="Delete your account and all of its resources" />
+                    <div className="space-y-4 rounded-lg border border-red-100 bg-red-50 p-4 dark:border-red-200/10 dark:bg-red-700/10">
+                        <div className="relative space-y-0.5 text-red-600 dark:text-red-100">
+                            <p className="font-medium">Warning</p>
+                            <p className="text-sm">Please proceed with caution, this cannot be undone.</p>
+                        </div>
+                        <ConfirmActionDialog
+                            triggerText="Delete Account"
+                            title="Are you sure?"
+                            description="This action will permanently delete your account and all its data. Please confirm by entering your password."
+                            url={route('profile.destroy')}
+                            method="delete"
+                            fields={[
+                                {
+                                    name: 'password',
+                                    type: 'input',
+                                    label: 'Password',
+                                    placeholder: 'Enter your password',
+                                    autoComplete: 'current-password',
+                                },
+                            ]}
+                            confirmText="Delete"
+                            cancelText="Cancel"
+                            destructive
+                            onSuccess={() => {
+                                // optional: redirect or show toast
+                            }}
+                        />
+                    </div>
+                </div>
             </SettingsLayout>
         </AppLayout>
     );

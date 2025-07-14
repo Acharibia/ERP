@@ -204,7 +204,7 @@ export default function RegisterBusiness({ packages, countries, states, industri
                         </Alert>
                     )}
 
-                    <Stepper value={stepIndex} onChange={setStepIndex} className="w-full">
+                    <Stepper value={stepIndex} onStepChange={setStepIndex} className="w-full">
                         <div className="grid w-full grid-cols-5">
                             {steps.map((step) => (
                                 <StepperItem key={step.step} step={step.step} className="relative" icon={step.icon}>

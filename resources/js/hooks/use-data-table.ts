@@ -19,14 +19,15 @@ import {
     ColumnFilters,
     SortingState,
     VisibilityState,
-    RowSelection
+    RowSelection,
+    BulkAction,
+    DataTableRoutes
 } from '@/types/data-table'
 
-interface DataTableRoutes {
-    process: string; // Route name for processing data (e.g., 'modules.hr.datatable.process')
-    filterOptions?: string; // Route name for getting filter options (e.g., 'modules.hr.datatable.filter-options')
-    export?: string; // Route name for exporting data (e.g., 'modules.hr.datatable.export')
-}
+export type TableColumnDef<T> = ColumnDef<T, unknown> & {
+    meta: DataTableColumn;
+};
+
 
 interface UseDataTableProps<T extends BaseRowData> {
     dataTableClass: string
@@ -35,6 +36,7 @@ interface UseDataTableProps<T extends BaseRowData> {
     preserveStateKey?: string
     onDataLoaded?: (data: DataTableResponse<T>) => void
     onError?: (error: unknown) => void
+    fileName?: string;
 }
 
 export function useDataTable<T extends BaseRowData>({
@@ -43,20 +45,22 @@ export function useDataTable<T extends BaseRowData>({
     initialState = {},
     preserveStateKey,
     onDataLoaded,
-    onError
+    onError,
+    fileName
 }: UseDataTableProps<T>) {
     // Generate a unique preservation key if not provided
     const stateKey = preserveStateKey || `datatable-${dataTableClass.toLowerCase()}`
 
-    // Default initial state
-    const defaultState = useMemo(() => ({
-        pagination: { pageIndex: 0, pageSize: 10 },
-        sorting: [],
-        columnFilters: {},
-        columnVisibility: {},
-        rowSelection: {},
-        globalFilter: ''
-    }), [])
+    const defaultState = useMemo(() => {
+        return {
+            pagination: { pageIndex: 0, pageSize: 10 },
+            sorting: [],
+            columnFilters: {},
+            columnVisibility: {},
+            rowSelection: {},
+            globalFilter: ''
+        };
+    }, []);
 
     // State management
     const [data, setData] = useState<T[]>([])
@@ -66,6 +70,8 @@ export function useDataTable<T extends BaseRowData>({
     const [filterOptions, setFilterOptions] = useState({})
     const [error, setError] = useState<Error | null>(null)
     const [lastFetchId, setLastFetchId] = useState<number>(0)
+    const [bulkActions, setBulkActions] = useState<BulkAction[]>([]);
+
 
     // Merge initial state with defaults and preserved state
     const [tableState, setTableState] = useState<DataTableState>(() => {
@@ -79,16 +85,16 @@ export function useDataTable<T extends BaseRowData>({
     })
 
     // Convert DataTable columns to Tanstack columns
-    const tableColumns = useMemo<ColumnDef<T>[]>(() => {
+    const tableColumns = useMemo<ColumnDef<T, unknown>[]>(() => {
         return columns.map(column => ({
             id: column.data,
             accessorKey: column.data,
-            header: column.title,
-            enableSorting: column.orderable ?? true,
+            enableSorting: column.orderable !== false,
             enableHiding: true,
-            meta: column
-        }))
-    }, [columns])
+            meta: column as DataTableColumn
+        }));
+    }, [columns]);
+
 
     // State update helpers with preservation
     const updateState = useCallback(<K extends keyof DataTableState>(
@@ -138,7 +144,7 @@ export function useDataTable<T extends BaseRowData>({
                 draw: fetchId,
                 start: currentPageIndex * currentPageSize,
                 length: currentPageSize,
-                'search.value': currentGlobalFilter,
+                search: { value: currentGlobalFilter },
                 filters: Object.entries(currentColumnFilters)
                     .reduce<Record<string, string | string[]>>((acc, [key, value]) => {
                         if (value !== null && value !== undefined && value !== '') {
@@ -170,8 +176,17 @@ export function useDataTable<T extends BaseRowData>({
                 // Set the table data with the new data from the response
                 setData(datatableResponse.data)
                 setColumns(datatableResponse.columns)
+                setColumns(datatableResponse.columns)
+
+                const visibility: Record<string, boolean> = {};
+                datatableResponse.columns.forEach((column) => {
+                    visibility[column.data] = column.visible !== false;
+                });
+                updateState('columnVisibility', visibility);
+
                 setTotalRows(datatableResponse.recordsFiltered) // This should now be the count AFTER filtering
                 setFilterOptions(datatableResponse.filterOptions)
+                setBulkActions(datatableResponse.bulkActions || []);
 
                 if (onDataLoaded) {
                     onDataLoaded(datatableResponse)
@@ -191,16 +206,7 @@ export function useDataTable<T extends BaseRowData>({
         } finally {
             setIsLoading(false)
         }
-    }, [
-        dataTableClass,
-        routes.process,
-        stateKey,
-        columns,
-        lastFetchId,
-        onDataLoaded,
-        onError,
-        tableState
-    ])
+    }, [dataTableClass, routes.process, stateKey, tableState, columns, lastFetchId, updateState, onDataLoaded, onError])
 
     // Fetch filter options (if route is provided)
     const fetchFilterOptions = useCallback(async () => {
@@ -219,42 +225,48 @@ export function useDataTable<T extends BaseRowData>({
     // Export data (if route is provided)
     const exportData = useCallback(async (format: string = 'csv') => {
         if (!routes.export) {
-            console.warn('Export route not provided')
-            return
+            console.warn('Export route not provided');
+            return;
         }
 
         try {
-            const currentState = JSON.parse(sessionStorage.getItem(stateKey) || JSON.stringify(tableState))
+            const currentState = JSON.parse(sessionStorage.getItem(stateKey) || JSON.stringify(tableState));
 
             const params = {
-                dataTable: dataTableClass,
+                class: dataTableClass,
                 format,
+                fileName, // your custom filename (from props)
                 filters: currentState.columnFilters || {},
-                search: currentState.globalFilter || '',
-                sort: currentState.sorting || []
-            }
+                globalFilter: currentState.globalFilter || '',
+                sort: currentState.sorting || [],
+            };
 
             const response = await axios.get(route(routes.export), {
                 params,
-                responseType: 'blob'
-            })
+                responseType: 'blob',
+            });
 
-            // Create download link
-            const url = window.URL.createObjectURL(new Blob([response.data]))
-            const link = document.createElement('a')
-            link.href = url
-            link.setAttribute('download', `${dataTableClass}-export.${format}`)
-            document.body.appendChild(link)
-            link.click()
-            link.remove()
-            window.URL.revokeObjectURL(url)
+            // ✅ Use the filename from props directly, with fallback
+            const fallbackName = `${dataTableClass}-export.${format}`;
+            const filenameBase = fileName || fallbackName.replace(/\.\w+$/, '');
+            const filename = `${filenameBase}-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')}.${format}`;
+
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', filename);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
         } catch (err) {
-            console.error('Error exporting data:', err)
+            console.error('Error exporting data:', err);
             if (onError) {
-                onError(err)
+                onError(err);
             }
         }
-    }, [routes.export, dataTableClass, stateKey, tableState, onError])
+    }, [routes.export, dataTableClass, stateKey, tableState, onError, fileName]);
+
 
     // Create Tanstack table instance
     const table = useReactTable({
@@ -285,57 +297,54 @@ export function useDataTable<T extends BaseRowData>({
 
         // State update handlers
         onPaginationChange: (updater) => {
-            // Update state first to ensure correct pagination
             setTableState(prev => {
-                // Compute the new pagination state
                 const newPagination = typeof updater === 'function'
                     ? updater(prev.pagination)
                     : updater
-
                 const newState = {
                     ...prev,
                     pagination: newPagination
                 }
-
-                // Persist to storage
                 sessionStorage.setItem(stateKey, JSON.stringify(newState))
-
-                // Trigger fetch immediately after state update
-                setTimeout(() => fetchData(true), 0)
-
                 return newState
             })
         },
 
         onSortingChange: (updater) => {
             updateState('sorting', updater as unknown as SortingState[])
-
-            // Reset to first page when sorting changes
             updateState('pagination', {
                 ...tableState.pagination,
                 pageIndex: 0
             })
-
-            setTimeout(() => fetchData(true), 0)
         },
 
         onColumnFiltersChange: (updater) => {
-            const filters = {} as ColumnFilters
-                ; (updater as ColumnFiltersState).forEach(filter => {
-                    filters[filter.id] = filter.value as string | number | string[] | number[] | null
-                })
+            let filtersArray: ColumnFiltersState = [];
 
-            updateState('columnFilters', filters)
+            if (typeof updater === 'function') {
+                // updater is a function, call it with current filters
+                filtersArray = updater(
+                    Object.entries(tableState.columnFilters).map(([id, value]) => ({ id, value }))
+                );
+            } else if (Array.isArray(updater)) {
+                // updater is already an array
+                filtersArray = updater;
+            } else if (typeof updater === 'object' && updater !== null) {
+                // updater is an object (new TanStack Table behavior)
+                filtersArray = Object.entries(updater).map(([id, value]) => ({ id, value }));
+            }
 
-            // Reset to first page when filters change
+            const filters = {} as ColumnFilters;
+            filtersArray.forEach(filter => {
+                filters[filter.id] = filter.value as string | number | string[] | number[] | null;
+            });
+
+            updateState('columnFilters', filters);
             updateState('pagination', {
                 ...tableState.pagination,
                 pageIndex: 0
-            })
-
-            setTimeout(() => fetchData(true), 0)
+            });
         },
-
         onColumnVisibilityChange: (updater) => {
             updateState('columnVisibility', updater as unknown as VisibilityState)
         },
@@ -346,16 +355,17 @@ export function useDataTable<T extends BaseRowData>({
 
         onGlobalFilterChange: (updater) => {
             updateState('globalFilter', updater as unknown as string)
-
-            // Reset to first page when global filter changes
             updateState('pagination', {
                 ...tableState.pagination,
                 pageIndex: 0
             })
-
-            setTimeout(() => fetchData(true), 0)
         },
     })
+
+    // Fetch data when pagination, sorting, filters, or global filter changes
+    useEffect(() => {
+        fetchData(true)
+    }, [tableState.pagination, tableState.sorting, tableState.columnFilters, tableState.globalFilter])
 
     // Initial fetch on mount
     useEffect(() => {
@@ -400,6 +410,7 @@ export function useDataTable<T extends BaseRowData>({
         isLoading,
         totalRows,
         filterOptions,
+        bulkActions,
         error,
         fetchData,
         fetchFilterOptions,
@@ -408,6 +419,6 @@ export function useDataTable<T extends BaseRowData>({
         tableState,
         setTableState,
         changePage,
-        routes // Return routes for use in components
+        routes
     }
 }

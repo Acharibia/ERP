@@ -1,6 +1,6 @@
 import { Column } from '@tanstack/react-table';
 import * as LucideIcons from 'lucide-react';
-import { Check, Filter, RefreshCw } from 'lucide-react';
+import { Check, Filter } from 'lucide-react';
 import * as React from 'react';
 
 import { Badge } from '@/components/ui/badge';
@@ -56,7 +56,7 @@ const getIconComponent = (iconName?: string): LucideIcon | null => {
     return null;
 };
 
-export function DataTableFacetedFilter<TData, TValue>({ column, title = 'Filter', options, onRefresh }: DataTableFacetedFilterProps<TData, TValue>) {
+export function DataTableFacetedFilter<TData, TValue>({ column, title = 'Filter', options }: DataTableFacetedFilterProps<TData, TValue>) {
     // All hooks must be called before any early returns
     const facets = column?.getFacetedUniqueValues();
 
@@ -130,16 +130,6 @@ export function DataTableFacetedFilter<TData, TValue>({ column, title = 'Filter'
         column.setFilterValue(undefined);
     }, [column]);
 
-    const handleRefresh = React.useCallback(async () => {
-        if (!onRefresh) return;
-
-        try {
-            await onRefresh();
-        } catch (error) {
-            console.error('Filter refresh failed:', error);
-        }
-    }, [onRefresh]);
-
     // Early returns after all hooks are called
     if (!column) {
         return null;
@@ -156,7 +146,7 @@ export function DataTableFacetedFilter<TData, TValue>({ column, title = 'Filter'
     return (
         <Popover>
             <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className="h-8 border-dashed">
+                <Button variant="outline" size="sm" className="h-8 justify-start border-dashed">
                     <Filter className="mr-2 h-4 w-4" />
                     {title}
                     {hasSelections && (
@@ -220,19 +210,7 @@ export function DataTableFacetedFilter<TData, TValue>({ column, title = 'Filter'
                                 <CommandSeparator />
                                 <CommandGroup>
                                     <CommandItem onSelect={handleClearFilters} className="cursor-pointer justify-center text-center">
-                                        Clear filters
-                                    </CommandItem>
-                                </CommandGroup>
-                            </>
-                        )}
-
-                        {onRefresh && (
-                            <>
-                                <CommandSeparator />
-                                <CommandGroup>
-                                    <CommandItem onSelect={handleRefresh} className="cursor-pointer justify-center text-center">
-                                        <RefreshCw className="mr-2 h-4 w-4" />
-                                        Refresh options
+                                        <LucideIcons.Trash2 className="h-3 w-3" /> Clear filters
                                     </CommandItem>
                                 </CommandGroup>
                             </>

@@ -1,6 +1,4 @@
 // @/types/position.ts
-import { type StaticHeader } from '@/types/data-table';
-
 export type PositionStatus = 'active' | 'inactive';
 export type EmploymentType = 'full-time' | 'part-time' | 'contract' | 'intern';
 export type PositionLevel = 'entry' | 'mid' | 'senior' | 'manager' | 'executive';
@@ -81,70 +79,3 @@ export interface PositionWithDepartment extends PositionBasic {
     employee_count?: number;
     salary_range?: string;
 }
-
-// Static headers for Position DataTable
-export const PositionStaticHeaders: StaticHeader[] = [
-    {
-        key: 'select',
-        title: '',
-        sortable: false,
-        visible: true,
-        type: 'checkbox',
-    },
-    {
-        key: 'id',
-        title: 'ID',
-        sortable: true,
-        className: 'font-medium',
-        visible: false,
-        type: 'text',
-    },
-    {
-        key: 'title',
-        title: 'Title',
-        sortable: true,
-        className: 'font-medium',
-        type: 'text',
-    },
-    {
-        key: 'department.name',
-        title: 'Department',
-        sortable: false,
-        className: 'text-muted-foreground',
-        type: 'text',
-    },
-    {
-        key: 'employment_type',
-        title: 'Type',
-        sortable: true,
-        className: 'capitalize',
-        type: 'text',
-    },
-    {
-        key: 'position_level',
-        title: 'Level',
-        sortable: true,
-        className: 'capitalize',
-        type: 'text',
-    },
-
-    {
-        key: 'status',
-        title: 'Status',
-        sortable: true,
-        type: 'badge',
-    },
-    {
-        key: 'created_at',
-        title: 'Created',
-        sortable: true,
-        type: 'date',
-        className: 'text-sm text-muted-foreground',
-    },
-    {
-        key: 'actions',
-        title: 'Actions',
-        sortable: false,
-        type: 'actions',
-    },
-];

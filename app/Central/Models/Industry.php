@@ -8,9 +8,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Stancl\Tenancy\Database\Concerns\CentralConnection;
 
-class Industry extends Model
+class Industry extends CentralModel
 {
-    use HasFactory, CentralConnection;
+    use HasFactory;
 
     /**
      * The attributes that are mass assignable.

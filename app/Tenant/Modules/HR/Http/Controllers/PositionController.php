@@ -5,11 +5,13 @@ namespace App\Tenant\Modules\HR\Http\Controllers;
 use App\Central\Http\Controllers\Controller;
 use App\Tenant\Modules\HR\Enum\EmploymentType;
 use App\Tenant\Modules\HR\Enum\PositionLevel;
+use App\Tenant\Modules\HR\Enum\PositionStatus;
 use App\Tenant\Modules\HR\Models\Department;
 use App\Tenant\Modules\HR\Models\Position;
 use App\Tenant\Modules\HR\Http\Requests\StorePositionRequest;
 use App\Tenant\Modules\HR\Http\Requests\UpdatePositionRequest;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -95,11 +97,48 @@ class PositionController extends Controller
             ->with('success', 'Position updated successfully.');
     }
 
+    public function activate(Request $request, $id): RedirectResponse
+    {
+        $request->validate([
+            'password' => ['required', 'current_password'],
+        ]);
+        $position = Position::findOrFail($id);
+
+        if ($position->status === PositionStatus::ACTIVE) {
+            return back()->withErrors(['activate' => 'Position is already active.']);
+        }
+
+        $position->update(['status' => PositionStatus::ACTIVE]);
+
+        return redirect()->route('modules.hr.positions.index')
+            ->with('success', 'Position activated successfully.');
+    }
+
+    public function deactivate(Request $request, $id): RedirectResponse
+    {
+        $request->validate([
+            'password' => ['required', 'current_password'],
+        ]);
+        $position = Position::findOrFail($id);
+
+        if ($position->status === PositionStatus::INACTIVE) {
+            return back()->withErrors(['deactivate' => 'Position is already inactive.']);
+        }
+
+        $position->update(['status' => PositionStatus::INACTIVE]);
+
+        return redirect()->route('modules.hr.positions.index')
+            ->with('success', 'Position marked as inactive.');
+    }
+
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy($id): RedirectResponse
+    public function destroy(Request $request, $id): RedirectResponse
     {
+        $request->validate([
+            'password' => ['required', 'current_password'],
+        ]);
         $position = Position::findOrFail($id);
 
         // Check if position has employees
@@ -115,4 +154,62 @@ class PositionController extends Controller
             ->route('modules.hr.positions.index')
             ->with('success', 'Position deleted successfully.');
     }
+
+
+    public function bulkActivate(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'ids' => ['required', 'array', 'min:1'],
+            'ids.*' => ['integer', 'exists:positions,id'],
+            'password' => ['required', 'current_password'],
+        ]);
+
+        Position::whereIn('id', $validated['ids'])
+            ->where('status', '!=', PositionStatus::ACTIVE)
+            ->update(['status' => PositionStatus::ACTIVE]);
+
+        return redirect()->route('modules.hr.positions.index')
+            ->with('success', 'Selected positions activated successfully.');
+    }
+
+    public function bulkDeactivate(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'ids' => ['required', 'array', 'min:1'],
+            'ids.*' => ['integer', 'exists:positions,id'],
+            'password' => ['required', 'current_password'],
+        ]);
+
+        Position::whereIn('id', $validated['ids'])
+            ->where('status', '!=', PositionStatus::INACTIVE)
+            ->update(['status' => PositionStatus::INACTIVE]);
+
+        return redirect()->route('modules.hr.positions.index')
+            ->with('success', 'Selected positions marked as inactive.');
+    }
+
+    public function bulkDestroy(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'ids' => ['required', 'array', 'min:1'],
+            'ids.*' => ['integer', 'exists:positions,id'],
+            'password' => ['required', 'current_password'],
+        ]);
+
+        $positions = Position::whereIn('id', $validated['ids'])->get();
+
+        foreach ($positions as $position) {
+            if ($position->employees()->exists()) {
+                return back()->withErrors([
+                    'delete' => "Cannot delete position '{$position->title}' that has employees assigned.",
+                ]);
+            }
+
+            $position->delete();
+        }
+
+        return redirect()->route('modules.hr.positions.index')
+            ->with('success', 'Selected positions deleted successfully.');
+    }
+
 }

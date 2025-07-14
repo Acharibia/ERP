@@ -90,7 +90,6 @@ export interface PageProps extends SharedData {
     activeBusiness?: Business | null;
     availableModules?: Module[];
     userBusinesses?: Business[];
-
 }
 
 /**
@@ -165,42 +164,30 @@ export type Industry = {
 };
 
 
-
-export interface LeaveType {
-    id: number;
+export interface MaritalStatus {
+    id: string;
     name: string;
-    code: string;
-    color: string; // For badge styling
-    maxDays?: number; // Optional limit per year
-    requiresApproval: boolean;
-    carryOver: boolean; // Can unused days carry over?
-    description?: string;
-    isActive: boolean;
+    value: string;
+}
+export interface EmploymentType {
+    id: string;
+    name: string;
+    value: string;
+}
+export interface EmploymentStatus {
+    id: string;
+    name: string;
+    value: string;
+}
+export interface DegreeType {
+    id: string;
+    name: string;
+    value: string;
 }
 
-export interface LeaveRequest {
-    id: number;
-    employee: {
-        name: string;
-        initials: string;
-        avatar?: string;
-        department: string;
-    };
-    leaveType: LeaveType; // Now an object instead of string
-    status: 'pending' | 'approved' | 'rejected' | 'ongoing' | 'completed';
-    startDate: string;
-    endDate: string;
-    days: number;
-    reason: string;
-    appliedDate: string;
-    approver: {
-        name: string;
-        initials: string;
-    } | null;
-    priority: 'low' | 'normal' | 'high' | 'urgent';
-}
 
 
 export * from './employee';
+export * from './leave';
 export * from './department';
 export * from './position';

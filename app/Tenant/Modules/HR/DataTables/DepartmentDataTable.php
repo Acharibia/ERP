@@ -3,6 +3,7 @@
 namespace App\Tenant\Modules\HR\DataTables;
 
 use App\Support\DataTables\AbstractDataTable;
+use App\Tenant\Modules\HR\Enum\DepartmentStatus;
 use App\Tenant\Modules\HR\Models\Department;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Query\Builder as QueryBuilder;
@@ -16,14 +17,7 @@ class DepartmentDataTable extends AbstractDataTable
      */
     public function query(): EloquentBuilder|QueryBuilder
     {
-        return Department::query()->select([
-            'id',
-            'name',
-            'description',
-            'status',
-            'created_at',
-            'updated_at'
-        ]);
+        return Department::query();
     }
 
     /**
@@ -34,7 +28,8 @@ class DepartmentDataTable extends AbstractDataTable
     public function build(): void
     {
         $this->addColumn('id', 'ID', [
-            'visible' => false
+            'visible' => false,
+            'exportable' => false
         ])
             ->addColumn('name', 'Name', [
                 'searchable' => true,
@@ -45,32 +40,96 @@ class DepartmentDataTable extends AbstractDataTable
                 'orderable' => true,
                 'className' => 'text-muted-foreground'
             ])
+
             ->addBadgeColumn('status', 'Status', [], [
-                'active' => [
+                DepartmentStatus::ACTIVE->value => [
                     'color' => 'default',
-                    'icon' => 'CheckCircle'
+                    'icon' => 'CheckCircle',
                 ],
-                'inactive' => [
-                    'color' => 'secondary',
-                    'icon' => 'CircleOff'
+                DepartmentStatus::INACTIVE->value => [
+                    'color' => 'destructive',
+                    'icon' => 'CircleOff',
+                ],
+                DepartmentStatus::SUSPENDED->value => [
+                    'color' => 'outline',
+                    'icon' => 'Ban',
                 ],
                 'default' => [
                     'color' => 'secondary',
-                    'icon' => 'CircleOff'
-                ]
+                    'icon' => 'CircleOff',
+                ],
             ])
-            ->addDateColumn('created_at', 'Date Created', 'M j, Y g:i a', [
-                'searchable' => false,
+            ->addDateColumn('created_at', 'Created At', 'M j, Y g:i a', [
+                'searchable' => true,
                 'orderable' => true,
                 'className' => 'text-sm text-muted-foreground'
             ])
-            ->addActionColumn('actions', 'Actions', [
-                ['name' => 'view', 'icon' => 'Eye'],
-                ['name' => 'edit', 'icon' => 'Edit'],
-                ['name' => 'delete', 'icon' => 'Trash2'],
-                ['name' => 'suspend', 'icon' => 'Ban']
-            ]);
+            ->addActionColumn('actions', 'Actions', function ($department) {
+                return match ($department->status) {
+                    DepartmentStatus::ACTIVE => [
+                        ['name' => 'view', 'icon' => 'Eye', 'label' => 'View'],
+                        ['name' => 'edit', 'icon' => 'Edit', 'label' => 'Edit'],
+                        ['name' => 'suspend', 'icon' => 'Ban', 'label' => 'Suspend'],
+                        ['name' => 'deactivate', 'icon' => 'CircleOff', 'label' => 'Deactivate'],
+                        ['name' => 'delete', 'icon' => 'Trash2', 'label' => 'Delete'],
+                    ],
+                    DepartmentStatus::INACTIVE => [
+                        ['name' => 'view', 'icon' => 'Eye', 'label' => 'View'],
+                        ['name' => 'edit', 'icon' => 'Edit', 'label' => 'Edit'],
+                        ['name' => 'activate', 'icon' => 'CheckCircle', 'label' => 'Activate'],
+                        ['name' => 'delete', 'icon' => 'Trash2', 'label' => 'Delete'],
+
+                    ],
+                    DepartmentStatus::SUSPENDED => [
+                        ['name' => 'view', 'icon' => 'Eye', 'label' => 'View'],
+                        ['name' => 'edit', 'icon' => 'Edit', 'label' => 'Edit'],
+                        ['name' => 'activate', 'icon' => 'CheckCircle', 'label' => 'Activate'],
+                        ['name' => 'delete', 'icon' => 'Trash2', 'label' => 'Delete'],
+
+                    ],
+                };
+
+            });
+
+
     }
+
+
+    /**
+     * Get bulk actions for the DataTable.
+     *
+     * @return array
+     */
+    public function bulkActions(): array
+    {
+        return [
+            [
+                'label' => 'Activate',
+                'value' => 'activate',
+                'icon' => 'CheckCircle',
+                'variant' => 'default',
+            ],
+            [
+                'label' => 'Suspend',
+                'value' => 'suspend',
+                'icon' => 'Ban',
+                'variant' => 'secondary',
+            ],
+            [
+                'label' => 'Deactivate',
+                'value' => 'deactivate',
+                'icon' => 'CircleOff',
+                'variant' => 'outline',
+            ],
+            [
+                'label' => 'Delete',
+                'value' => 'delete',
+                'icon' => 'Trash2',
+                'variant' => 'destructive',
+            ],
+        ];
+    }
+
 
     /**
      * Get filter options for the DataTable.
@@ -91,18 +150,17 @@ class DepartmentDataTable extends AbstractDataTable
      */
     protected function getStatusOptions(): array
     {
-        return [
-            [
-                'label' => 'Active',
-                'value' => 'active',
-                'icon' => 'CheckCircle'
-            ],
-            [
-                'label' => 'Inactive',
-                'value' => 'inactive',
-                'icon' => 'CircleOff'
-            ],
-        ];
+        return collect(DepartmentStatus::cases())->map(function (DepartmentStatus $status) {
+            return [
+                'label' => ucfirst(strtolower($status->name)),
+                'value' => $status->value,
+                'icon' => match ($status) {
+                    DepartmentStatus::ACTIVE => 'CheckCircle',
+                    DepartmentStatus::INACTIVE => 'CircleOff',
+                    DepartmentStatus::SUSPENDED => 'Ban',
+                },
+            ];
+        })->all();
     }
 
     /**

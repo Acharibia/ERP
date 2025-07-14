@@ -1,11 +1,14 @@
 'use client';
 
 import { Table } from '@tanstack/react-table';
-import { X } from 'lucide-react';
+import { SlidersHorizontal, X } from 'lucide-react';
 import * as React from 'react';
 
 import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
+import { BaseRowData, BulkAction } from '@/types/data-table';
+import { DataTableBulkActions } from './data-table-bulkactions';
 import { DataTableExport } from './data-table-export';
 import { DataTableFacetedFilter } from './data-table-faceted-filter';
 import { DataTableViewOptions } from './data-table-view-options';
@@ -16,9 +19,23 @@ interface DataTableToolbarProps<TData> {
     dataTableClass: string;
     onExport?: (format: string) => Promise<void>;
     onRefreshFilters?: () => Promise<void>;
+    fileName?: string;
+    bulkActions?: BulkAction[];
+    selectedRows?: BaseRowData[];
+    onBulkAction?: (action: string, rows: BaseRowData[]) => void;
 }
 
-export function DataTableToolbar<TData>({ table, filterOptions = {}, dataTableClass, onExport, onRefreshFilters }: DataTableToolbarProps<TData>) {
+export function DataTableToolbar<TData>({
+    table,
+    filterOptions = {},
+    dataTableClass,
+    onExport,
+    onRefreshFilters,
+    fileName,
+    bulkActions,
+    selectedRows,
+    onBulkAction,
+}: DataTableToolbarProps<TData>) {
     const isFiltered = table.getState().columnFilters.length > 0;
 
     const processedFilterOptions = React.useMemo(() => {
@@ -29,8 +46,8 @@ export function DataTableToolbar<TData>({ table, filterOptions = {}, dataTableCl
     }, [filterOptions]);
 
     return (
-        <div className="flex items-center justify-between">
-            <div className="flex flex-1 items-center space-x-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
                 <Input
                     placeholder="Search..."
                     value={table.getState().globalFilter ?? ''}
@@ -38,34 +55,60 @@ export function DataTableToolbar<TData>({ table, filterOptions = {}, dataTableCl
                     className="h-8 w-[150px] lg:w-[250px]"
                 />
 
-                {Object.entries(processedFilterOptions).map(([columnId, options]) => {
-                    const column = table.getColumn(columnId);
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm" className="h-8 gap-1">
+                            <SlidersHorizontal className="h-4 w-4" />
+                            <span className="sr-only sm:not-sr-only">Filters</span>
+                        </Button>
+                    </DropdownMenuTrigger>
 
-                    if (!column) {
-                        console.warn(
-                            `Column '${columnId}' not found in table. Available columns:`,
-                            table.getAllColumns().map((c) => c.id),
-                        );
-                        return null;
-                    }
+                    <DropdownMenuContent>
+                        <div className="flex flex-col space-y-3 p-4">
+                            {Object.entries(processedFilterOptions).map(([columnId, options]) => {
+                                const column = table.getColumn(columnId);
 
-                    const title =
-                        (column.columnDef.meta && 'title' in column.columnDef.meta
-                            ? (column.columnDef.meta as { title?: string }).title
-                            : undefined) || columnId;
+                                if (!column) {
+                                    console.warn(
+                                        `Column '${columnId}' not found in table. Available columns:`,
+                                        table.getAllColumns().map((c) => c.id),
+                                    );
+                                    return null;
+                                }
 
-                    return <DataTableFacetedFilter key={columnId} column={column} title={title} options={options} onRefresh={onRefreshFilters} />;
-                })}
+                                const title =
+                                    (column.columnDef.meta && 'title' in column.columnDef.meta
+                                        ? (column.columnDef.meta as { title?: string }).title
+                                        : undefined) || columnId;
 
-                {isFiltered && (
-                    <Button variant="ghost" onClick={() => table.resetColumnFilters()} className="h-8 px-2 lg:px-3">
-                        Reset
-                        <X className="ml-2 h-4 w-4" />
-                    </Button>
-                )}
+                                return (
+                                    <DataTableFacetedFilter
+                                        key={columnId}
+                                        column={column}
+                                        title={title}
+                                        options={options}
+                                        onRefresh={onRefreshFilters}
+                                    />
+                                );
+                            })}
+
+                            {isFiltered && (
+                                <Button variant="ghost" onClick={() => table.resetColumnFilters()} className="h-8 w-full justify-start px-2 text-sm">
+                                    Reset filters
+                                    <X className="ml-2 h-4 w-4" />
+                                </Button>
+                            )}
+                        </div>
+                    </DropdownMenuContent>
+                </DropdownMenu>
             </div>
-            <div className="flex items-center space-x-2">
-                <DataTableExport table={table} dataTableClass={dataTableClass} onExport={onExport} />
+
+            <div className="flex items-center gap-2">
+                {bulkActions && selectedRows && selectedRows.length > 0 && onBulkAction && (
+                    <DataTableBulkActions actions={bulkActions} selectedRows={selectedRows} onBulkAction={onBulkAction} />
+                )}
+
+                <DataTableExport fileName={fileName} table={table} dataTableClass={dataTableClass} onExport={onExport} />
                 <DataTableViewOptions table={table} />
             </div>
         </div>

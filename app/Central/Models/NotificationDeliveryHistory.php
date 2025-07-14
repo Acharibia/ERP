@@ -2,26 +2,18 @@
 
 namespace App\Central\Models;
 
+use App\Central\Enums\NotificationChannel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Stancl\Tenancy\Database\Concerns\CentralConnection;
 
 class NotificationDeliveryHistory extends Model
 {
     use HasFactory, CentralConnection;
 
-    /**
-     * The table associated with the model.
-     *
-     * @var string
-     */
     protected $table = 'notification_delivery_history';
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array
-     */
     protected $fillable = [
         'user_id',
         'channel',
@@ -33,12 +25,8 @@ class NotificationDeliveryHistory extends Model
         'data',
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array
-     */
     protected $casts = [
+        'channel' => NotificationChannel::class,
         'success' => 'boolean',
         'data' => 'json',
         'created_at' => 'datetime',
@@ -46,58 +34,36 @@ class NotificationDeliveryHistory extends Model
     ];
 
     /**
-     * Get the user associated with the notification.
+     * Relationships
      */
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    /**
-     * Get the template associated with the notification.
-     */
     public function template()
     {
-        return $this->belongsTo(NotificationTemplate::class, 'template_id');
+        return $this->belongsTo(NotificationTemplate::class);
     }
 
     /**
-     * Scope a query to only include successful deliveries.
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @return \Illuminate\Database\Eloquent\Builder
+     * Scopes
      */
     public function scopeSuccessful($query)
     {
         return $query->where('success', true);
     }
 
-    /**
-     * Scope a query to only include failed deliveries.
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @return \Illuminate\Database\Eloquent\Builder
-     */
     public function scopeFailed($query)
     {
         return $query->where('success', false);
     }
 
     /**
-     * Create a delivery history record
-     *
-     * @param string $channel
-     * @param string $recipient
-     * @param string $templateCode
-     * @param int|null $userId
-     * @param int|null $templateId
-     * @param bool $success
-     * @param string|null $errorMessage
-     * @param array|null $data
-     * @return self
+     * Create a delivery history record.
      */
     public static function log(
-        string $channel,
+        NotificationChannel|string $channel,
         string $recipient,
         string $templateCode,
         ?int $userId = null,
@@ -108,7 +74,7 @@ class NotificationDeliveryHistory extends Model
     ): self {
         return self::create([
             'user_id' => $userId,
-            'channel' => $channel,
+            'channel' => $channel instanceof NotificationChannel ? $channel->value : $channel,
             'recipient' => $recipient,
             'template_id' => $templateId,
             'template_code' => $templateCode,
@@ -116,5 +82,17 @@ class NotificationDeliveryHistory extends Model
             'error_message' => $errorMessage,
             'data' => $data,
         ]);
+    }
+
+    /**
+     * Get human-readable channel label (optional).
+     */
+    protected function channelLabel(): Attribute
+    {
+        return Attribute::get(
+            fn() => $this->channel instanceof NotificationChannel
+            ? $this->channel->label()
+            : NotificationChannel::tryFrom($this->channel)?->label()
+        );
     }
 }

@@ -68,7 +68,7 @@ export default function AppLayout({ children, breadcrumbs, ...props }: AppLayout
     return (
         <LayoutComponent breadcrumbs={breadcrumbs} {...props}>
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl">{children}</div>
-            <Toaster />
+            <Toaster richColors position="bottom-right" closeButton />
         </LayoutComponent>
     );
 }

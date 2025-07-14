@@ -1,4 +1,4 @@
-import { Column } from '@tanstack/react-table';
+import { Column, Table } from '@tanstack/react-table';
 import { ArrowDown, ArrowUp, ChevronsUpDown, EyeOff } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 
 interface DataTableColumnHeaderProps<TData, TValue> extends React.HTMLAttributes<HTMLDivElement> {
     column: Column<TData, TValue>;
+    table: Table<TData>;
     title: string;
     onSortChange?: () => void;
 }
@@ -23,6 +24,7 @@ export function DataTableColumnHeader<TData, TValue>({ column, title, className,
             onSortChange();
         }
     };
+
 
     return (
         <div className={cn('flex items-center space-x-2', className)}>

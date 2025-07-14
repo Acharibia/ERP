@@ -2,22 +2,18 @@
 
 namespace App\Tenant\Modules\HR\Http\Requests;
 
+use App\Tenant\Modules\HR\Enum\DepartmentStatus;
+use App\Tenant\Modules\HR\Models\Department;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class UpdateDepartmentRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
-        return true; // You can add authorization logic here
+        return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     */
     public function rules(): array
     {
         $department = $this->route('department');
@@ -39,27 +35,31 @@ class UpdateDepartmentRequest extends FormRequest
             'parent_id' => [
                 'nullable',
                 'exists:departments,id',
-                'not_in:' . $department->id, // Prevent self-reference
+                'not_in:' . $department->id,
             ],
             'manager_id' => 'nullable|exists:employees,id',
             'budget' => 'nullable|numeric|min:0',
             'cost_center' => 'nullable|string|max:255',
             'location' => 'nullable|string|max:255',
-            'status' => 'string|in:active,inactive',
+            'status' => [
+                'required',
+                'string',
+                Rule::in(array_column(DepartmentStatus::cases(), 'value')),
+            ],
         ];
     }
 
-    /**
-     * Get custom messages for validator errors.
-     */
     public function messages(): array
     {
         return [
             'name.required' => 'Department name is required.',
             'name.max' => 'Department name cannot exceed 255 characters.',
+            'email.required' => 'Department email is required.',
+            'email.email' => 'Enter a valid email address.',
+            'email.unique' => 'This department email is already taken.',
             'code.required' => 'Department code is required.',
             'code.unique' => 'This department code is already taken.',
-            'code.max' => 'Department code cannot exceed 50 characters.',
+            'code.max' => 'Department code cannot exceed 4 characters.',
             'parent_id.exists' => 'Selected parent department does not exist.',
             'parent_id.not_in' => 'A department cannot be its own parent.',
             'manager_id.exists' => 'Selected manager does not exist.',
@@ -67,42 +67,30 @@ class UpdateDepartmentRequest extends FormRequest
             'budget.min' => 'Budget cannot be negative.',
             'cost_center.max' => 'Cost center cannot exceed 255 characters.',
             'location.max' => 'Location cannot exceed 255 characters.',
+            'status.in' => 'Invalid department status selected.',
         ];
     }
 
-    /**
-     * Get custom attributes for validator errors.
-     */
     public function attributes(): array
     {
         return [
             'parent_id' => 'parent department',
             'manager_id' => 'department manager',
             'cost_center' => 'cost center',
-            'is_active' => 'status',
         ];
     }
 
-    /**
-     * Configure the validator instance.
-     */
     public function withValidator($validator): void
     {
         $validator->after(function ($validator) {
             $department = $this->route('department');
 
-            // Additional validation to prevent circular references
-            if ($this->parent_id) {
-                if ($this->wouldCreateCircularReference($department->id, $this->parent_id)) {
-                    $validator->errors()->add('parent_id', 'This selection would create a circular reference.');
-                }
+            if ($this->parent_id && $this->wouldCreateCircularReference($department->id, $this->parent_id)) {
+                $validator->errors()->add('parent_id', 'This selection would create a circular reference.');
             }
         });
     }
 
-    /**
-     * Check if setting the parent would create a circular reference.
-     */
     private function wouldCreateCircularReference(int $departmentId, int $parentId): bool
     {
         $current = $parentId;
@@ -114,12 +102,12 @@ class UpdateDepartmentRequest extends FormRequest
             }
 
             if (in_array($current, $visited)) {
-                break; // Circular reference detected in parent chain
+                break;
             }
 
             $visited[] = $current;
 
-            $parent = \App\Tenant\Modules\HR\Models\Department::find($current);
+            $parent = Department::find($current);
             $current = $parent ? $parent->parent_id : null;
         }
 

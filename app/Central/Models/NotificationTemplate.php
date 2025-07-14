@@ -2,6 +2,8 @@
 
 namespace App\Central\Models;
 
+use App\Central\Enums\NotificationChannel;
+use App\Central\Enums\NotificationType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -20,16 +22,12 @@ class NotificationTemplate extends Model
         'code',
         'name',
         'description',
-        'channel',
+        'channels',
         'subject',
         'content',
         'variables',
         'notification_type',
-        'is_system',
         'is_active',
-        'access_level',
-        'reseller_id',
-        'business_id',
     ];
 
     /**
@@ -38,8 +36,9 @@ class NotificationTemplate extends Model
      * @var array
      */
     protected $casts = [
-        'variables' => 'json',
-        'is_system' => 'boolean',
+        'channels' => 'array', // JSON array of NotificationChannel values
+        'variables' => 'array',
+        'notification_type' => NotificationType::class,
         'is_active' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
@@ -47,22 +46,7 @@ class NotificationTemplate extends Model
     ];
 
     /**
-     * Scope a query to only include templates for a specific channel.
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @param string $channel
-     * @return \Illuminate\Database\Eloquent\Builder
-     */
-    public function scopeChannel($query, string $channel)
-    {
-        return $query->where('channel', $channel);
-    }
-
-    /**
      * Scope a query to only include active templates.
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @return \Illuminate\Database\Eloquent\Builder
      */
     public function scopeActive($query)
     {
@@ -70,18 +54,12 @@ class NotificationTemplate extends Model
     }
 
     /**
-     * Get the reseller that owns the template.
+     * Scope a query to only include templates containing a specific channel.
      */
-    public function reseller()
+    public function scopeWithChannel($query, NotificationChannel|string $channel)
     {
-        return $this->belongsTo(Reseller::class);
-    }
+        $value = $channel instanceof NotificationChannel ? $channel->value : $channel;
 
-    /**
-     * Get the business that owns the template.
-     */
-    public function business()
-    {
-        return $this->belongsTo(Business::class);
+        return $query->whereJsonContains('channels', $value);
     }
 }

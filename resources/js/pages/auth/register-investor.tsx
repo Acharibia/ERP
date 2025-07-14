@@ -173,7 +173,7 @@ export default function RegisterInvestor() {
 
             <div className="mx-auto max-w-3xl">
                 <form onSubmit={onSubmit} className="space-y-6">
-                    <Stepper value={stepIndex} onChange={setStepIndex} className="w-full">
+                    <Stepper value={stepIndex} onStepChange={setStepIndex} className="w-full">
                         <div className="grid w-full grid-cols-3">
                             {steps.map((step) => (
                                 <StepperItem key={step.step} step={step.step} className="relative">

@@ -19,6 +19,7 @@ class AccessSelectionController extends Controller
         $user = $request->user();
         $activeBusiness = $request->session()->get('active_business');
 
+
         if (!$activeBusiness || !isset($activeBusiness->id)) {
             return redirect()->route('business.selection');
         }
@@ -60,6 +61,7 @@ class AccessSelectionController extends Controller
         // Get modules through active subscription
         if ($business->subscription) {
             $modules = $business->subscription->package->modules;
+
 
             // If not a business admin, filter by access
             if (!$user->isBusinessAdmin($business)) {

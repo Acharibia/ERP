@@ -2,92 +2,110 @@ import { DataTable } from '@/components/shared/data-table';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { PageHeader } from '@/components/ui/page-header';
-import { useIsMobile } from '@/hooks/use-mobile';
 import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem } from '@/types';
-import { DepartmentStaticHeaders } from '@/types/department';
+import { DepartmentBasic, type BreadcrumbItem } from '@/types';
+import { DataTableRef, ModuleDataTableRoutes } from '@/types/data-table';
 import { Head, router } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
+import { useRef } from 'react';
+import ActivateDepartmentDialog, { ActivateDepartmentDialogRef } from './partials/activate-dialog';
+import DeactivateDepartmentDialog, { DeactivateDepartmentDialogRef } from './partials/deactivate-dialog';
+import DeleteDepartmentDialog, { DeleteDepartmentDialogRef } from './partials/delete-dialog';
+import SuspendDepartmentDialog, { SuspendDepartmentDialogRef } from './partials/suspend-dialog';
 
 const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Dashboard',
-        href: '/modules/hr/dashboard',
-    },
-    {
-        title: 'Departments',
-        href: '/modules/hr/departments',
-    },
+    { title: 'Dashboard', href: '/modules/hr/dashboard' },
+    { title: 'Departments', href: '/modules/hr/departments' },
 ];
 
 export default function Index() {
-    const isMobile = useIsMobile();
+    const tableRef = useRef<DataTableRef>(null);
 
-    const dataTableRoutes = {
-        process: 'modules.hr.datatable.process',
-        filterOptions: 'modules.hr.datatable.filter-options',
-        export: 'modules.hr.datatable.export',
-    };
-
-    type DepartmentRow = { id: number | string };
-
-    const handleRowAction = (action: string, row: unknown) => {
-        const department = row as DepartmentRow;
+    const deleteDialogRef = useRef<DeleteDepartmentDialogRef>(null);
+    const suspendDialogRef = useRef<SuspendDepartmentDialogRef>(null);
+    const activateDialogRef = useRef<ActivateDepartmentDialogRef>(null);
+    const deactivateDialogRef = useRef<DeactivateDepartmentDialogRef>(null);
+    const handleRowAction = (action: string, row: DepartmentBasic) => {
         switch (action) {
             case 'view':
-                router.visit(route('modules.hr.departments.show', { id: department.id }));
+                router.visit(route('modules.hr.departments.show', { id: row.id }));
                 break;
             case 'edit':
-                router.visit(route('modules.hr.departments.edit', { id: department.id }));
+                router.visit(route('modules.hr.departments.edit', { id: row.id }));
                 break;
             case 'delete':
-                if (confirm('Are you sure you want to delete this department?')) {
-                    router.delete(route('modules.hr.departments.destroy', { id: department.id }));
-                }
+                deleteDialogRef.current?.show(row);
+                break;
+            case 'suspend':
+                suspendDialogRef.current?.show(row);
+                break;
+            case 'activate':
+                activateDialogRef.current?.show(row);
+                break;
+            case 'deactivate':
+                deactivateDialogRef.current?.show(row);
                 break;
             default:
                 console.log(`Unhandled action: ${action}`, row);
         }
     };
 
+    const handleBulkAction = (action: string, rows: DepartmentBasic[]) => {
+        switch (action) {
+            case 'activate':
+                activateDialogRef.current?.showMany(rows);
+                break;
+            case 'deactivate':
+                deactivateDialogRef.current?.showMany(rows);
+                break;
+            case 'suspend':
+                suspendDialogRef.current?.showMany(rows);
+                break;
+            case 'delete':
+                deleteDialogRef.current?.showMany(rows);
+                break;
+            default:
+                console.log(`Unknown bulk action: ${action}`, rows);
+        }
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Departments" />
-            <div className="flex h-full flex-1 flex-col gap-6 rounded-xl">
-                <PageHeader
-                    title="Department Management"
-                    description="Manage and oversee all departments across the organization"
-                    action={
-                        <Button onClick={() => router.visit(route('modules.hr.departments.create'))} size="sm">
-                            <Plus className="mr-2 h-4 w-4" />
-                            Add Department
-                        </Button>
-                    }
-                />
+            <PageHeader
+                title="Department Management"
+                description="Manage and oversee all departments across the organization"
+                action={
+                    <Button onClick={() => router.visit(route('modules.hr.departments.create'))} size="sm">
+                        <Plus className="mr-2 h-4 w-4" />
+                        Add Department
+                    </Button>
+                }
+            />
 
-                <Card>
-                    <CardHeader className={`${isMobile ? 'p-4' : 'flex flex-row items-center justify-between'}`}>
-                        <div>
-                            <CardTitle className={isMobile ? 'text-base' : 'text-sm font-medium'}>Departments</CardTitle>
-                            <CardDescription className={isMobile ? 'text-xs' : ''}>
-                                {isMobile
-                                    ? 'View and manage department records'
-                                    : 'View and manage all departments records and organizational structure'}
-                            </CardDescription>
-                        </div>
-                    </CardHeader>
-                    <CardContent className={isMobile ? 'p-4 pt-0' : ''}>
-                        <DataTable
-                            dataTableClass="DepartmentDataTable"
-                            routes={dataTableRoutes}
-                            enableRowClick
-                            onRowAction={handleRowAction}
-                            preserveStateKey="hr-departments-table"
-                            staticHeaders={DepartmentStaticHeaders}
-                        />
-                    </CardContent>
-                </Card>
-            </div>
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                    <div>
+                        <CardTitle className="text-sm font-medium">Departments</CardTitle>
+                        <CardDescription>View and manage all departments records and organizational structure</CardDescription>
+                    </div>
+                </CardHeader>
+                <CardContent>
+                    <DataTable
+                        ref={tableRef}
+                        dataTableClass="DepartmentDataTable"
+                        routes={ModuleDataTableRoutes}
+                        fileName="Departments"
+                        onRowAction={handleRowAction}
+                        onBulkAction={handleBulkAction}
+                        preserveStateKey="hr-departments-table"
+                    />
+                </CardContent>
+            </Card>
+            <DeleteDepartmentDialog ref={deleteDialogRef} onDeleted={() => tableRef.current?.reload()} />
+            <SuspendDepartmentDialog ref={suspendDialogRef} onSuspended={() => tableRef.current?.reload()} />
+            <ActivateDepartmentDialog ref={activateDialogRef} onActivated={() => tableRef.current?.reload()} />
+            <DeactivateDepartmentDialog ref={deactivateDialogRef} onDeactivated={() => tableRef.current?.reload()} />
         </AppLayout>
     );
 }

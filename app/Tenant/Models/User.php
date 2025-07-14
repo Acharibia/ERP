@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use App\Central\Models\User as CentralUser;
+
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
@@ -40,6 +42,8 @@ class User extends Authenticatable
         'remember_token',
     ];
 
+
+
     /**
      * Get the attributes that should be cast.
      *
@@ -52,12 +56,25 @@ class User extends Authenticatable
         'password_changed_at' => 'datetime',
     ];
 
+    protected $appends = ['profile_picture'];
+
+
+    public function getCentralUser()
+    {
+        return CentralUser::where('global_id', $this->global_id)->first();
+    }
+
+    public function getProfilePictureAttribute(): ?string
+    {
+        return $this->getCentralUser()?->getFirstMediaUrl('profile_picture');
+    }
+
     /**
      * Check if the user is a business admin
      */
     public function isBusinessAdmin(): bool
     {
-        return $this->hasRole('business_admin');
+        return $this->hasRole('admin');
     }
 
     /**
@@ -78,11 +95,4 @@ class User extends Authenticatable
         return $this->status === 'active';
     }
 
-    /**
-     * Get the central user (requires context switching, use sparingly)
-     */
-    public function getCentralUser()
-    {
-        return \App\Central\Models\User::where('global_id', $this->global_id)->first();
-    }
 }

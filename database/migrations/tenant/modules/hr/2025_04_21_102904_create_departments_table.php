@@ -1,5 +1,6 @@
 <?php
 
+use App\Tenant\Modules\HR\Enum\DepartmentStatus;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -22,7 +23,7 @@ return new class extends Migration {
             $table->string('cost_center')->nullable();
             $table->string('location')->nullable();
             $table->integer('headcount_limit')->nullable();
-            $table->enum('status', ['active', 'inactive'])->default('active');
+            $table->enum('status', array_column(DepartmentStatus::cases(), 'value'))->default(DepartmentStatus::ACTIVE->value);
             $table->timestamps();
         });
     }

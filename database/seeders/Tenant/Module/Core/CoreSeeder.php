@@ -1,6 +1,6 @@
 <?php
 
-namespace Database\Seeders\Module\Core;
+namespace Database\Seeders\Tenant\Module\Core;
 
 use Illuminate\Database\Seeder;
 use Spatie\Permission\PermissionRegistrar;

@@ -21,11 +21,10 @@ return new class extends Migration {
             $table->boolean('can_carry_forward')->default(false);
             $table->decimal('max_carry_forward_days', 5, 1)->nullable();
             $table->integer('carry_forward_expiry_months')->nullable();
-            $table->boolean('is_active')->default(true);
+            $table->string('status')->default('active');
             $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamps();
             $table->softDeletes();
-
         });
     }
 

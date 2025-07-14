@@ -4,8 +4,11 @@ namespace App\Tenant\Modules\HR\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Central\Models\User as CentralUser;
+use App\Tenant\Models\User as TenantUser;
 
 class Employee extends Model
 {
@@ -13,54 +16,64 @@ class Employee extends Model
 
     protected $fillable = [
         'user_id',
-        'employee_id',
-        'name',
-        'work_email',
-        'personal_email',
-        'work_phone',
-        'personal_phone',
-        'birth_date',
-        'gender',
-        'marital_status',
-        'nationality',
-        'address',
-        'city',
-        'state_id',
-        'postal_code',
-        'country_id',
-        'hire_date',
-        'termination_date',
-        'termination_reason',
-        'department_id',
-        'position_id',
-        'manager_id',
-        'employment_status',
-        'employment_type',
-        'work_location',
-        'bio',
-        'is_active',
+        'employee_number',
     ];
+
+    protected $with = ['personalInfo'];
+
 
     protected $casts = [
-        'birth_date' => 'date',
-        'hire_date' => 'date',
-        'termination_date' => 'date',
-        'is_active' => 'boolean',
+        'deleted_at' => 'datetime',
     ];
+    protected $appends = ['name'];
+
+
+    public function getNameAttribute(): ?string
+    {
+        return $this->personalInfo?->name;
+    }
+
 
     // Relationships
-    public function department(): BelongsTo
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(Department::class);
+        return $this->belongsTo(TenantUser::class);
+    }
+
+    public function personalInfo(): HasOne
+    {
+        return $this->hasOne(EmployeePersonalInfo::class);
+    }
+
+    public function employmentInfo(): HasOne
+    {
+        return $this->hasOne(EmployeeEmploymentInfo::class);
+    }
+
+    public function education(): HasMany
+    {
+        return $this->hasMany(EmployeeEducation::class);
+    }
+
+    public function workExperience(): HasMany
+    {
+        return $this->hasMany(EmployeeWorkExperience::class);
+    }
+
+    public function emergencyContacts(): HasMany
+    {
+        return $this->hasMany(EmployeeEmergencyContact::class);
     }
 
     public function manager(): BelongsTo
     {
-        return $this->belongsTo(Employee::class, 'manager_id');
+        return $this->belongsTo(self::class, 'manager_id');
     }
 
     public function scopeActive($query)
     {
-        return $query->where('is_active', true);
+        return $query->whereHas('employmentInfo', function ($q) {
+            $q->where('employment_status', 'active');
+        });
     }
 }

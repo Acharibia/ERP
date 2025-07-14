@@ -5,7 +5,7 @@ namespace Database\Seeders\Central;
 use App\Central\Models\User;
 use App\Central\Models\UserProfile;
 use App\Central\Services\UserService;
-use App\Support\Enums\UserType;
+use App\Central\Enums\UserType;
 use Illuminate\Database\Seeder;
 
 class AdminUserSeeder extends Seeder

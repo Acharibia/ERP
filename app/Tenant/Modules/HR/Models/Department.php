@@ -2,10 +2,12 @@
 
 namespace App\Tenant\Modules\HR\Models;
 
+use App\Tenant\Modules\HR\Enum\DepartmentStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Department extends Model
 {
@@ -26,7 +28,7 @@ class Department extends Model
 
     protected $casts = [
         'budget' => 'decimal:2',
-        'status' => 'string',
+        'status' => DepartmentStatus::class,
     ];
 
     protected $appends = [
@@ -39,9 +41,16 @@ class Department extends Model
         return $this->belongsTo(Employee::class, 'manager_id');
     }
 
-    public function employees(): HasMany
+    public function employees(): HasManyThrough
     {
-        return $this->hasMany(Employee::class);
+        return $this->hasManyThrough(
+            Employee::class,
+            EmployeeEmploymentInfo::class,
+            'department_id',
+            'id',
+            'id',
+            'employee_id'
+        );
     }
 
     public function parent(): BelongsTo
@@ -65,7 +74,17 @@ class Department extends Model
     // Scopes
     public function scopeActive($query)
     {
-        return $query->where('status', 'active');
+        return $query->where('status', DepartmentStatus::ACTIVE);
+    }
+
+    public function scopeSuspended($query)
+    {
+        return $query->where('status', DepartmentStatus::SUSPENDED);
+    }
+
+    public function scopeInactive($query)
+    {
+        return $query->where('status', DepartmentStatus::INACTIVE);
     }
 
 }

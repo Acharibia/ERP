@@ -13,9 +13,10 @@ interface DataTableExportProps<TData> {
     table: Table<TData>;
     dataTableClass: string;
     onExport?: (format: string) => Promise<void>;
+    fileName?: string; // Optional file name for the export
 }
 
-export function DataTableExport<TData>({ table, dataTableClass, onExport }: DataTableExportProps<TData>) {
+export function DataTableExport<TData>({ table, dataTableClass, onExport, fileName }: DataTableExportProps<TData>) {
     const [isExporting, setIsExporting] = useState<string | null>(null);
 
     const handleExport = async (format: 'csv' | 'excel' | 'pdf') => {
@@ -46,6 +47,7 @@ export function DataTableExport<TData>({ table, dataTableClass, onExport }: Data
             const params = new URLSearchParams({
                 format,
                 class: dataTableClass,
+                fileName: fileName ?? dataTableClass,
                 globalFilter: globalFilter || '',
                 filters: JSON.stringify(Object.fromEntries(columnFilters.map((filter) => [filter.id, filter.value]))),
                 sort: JSON.stringify(sorting),
@@ -103,8 +105,8 @@ export function DataTableExport<TData>({ table, dataTableClass, onExport }: Data
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="ml-auto h-8">
-                    <Download className="mr-2 h-4 w-4" />
-                    Export
+                    <Download />
+                    <span className="sr-only sm:not-sr-only">Export</span>
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-[150px]">

@@ -2,7 +2,9 @@
 
 namespace App\Tenant\Modules\HR\Http\Requests;
 
+use App\Tenant\Modules\HR\Enum\DepartmentStatus;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreDepartmentRequest extends FormRequest
 {
@@ -29,7 +31,11 @@ class StoreDepartmentRequest extends FormRequest
             'budget' => 'nullable|numeric|min:0',
             'cost_center' => 'nullable|string|max:255',
             'location' => 'nullable|string|max:255',
-            'status' => 'string|in:active,inactive',
+            'status' => [
+                'required',
+                'string',
+                Rule::in(array_column(DepartmentStatus::cases(), 'value')),
+            ],
         ];
     }
 
@@ -41,15 +47,19 @@ class StoreDepartmentRequest extends FormRequest
         return [
             'name.required' => 'Department name is required.',
             'name.max' => 'Department name cannot exceed 255 characters.',
+            'email.required' => 'Department email is required.',
+            'email.email' => 'Enter a valid email address.',
+            'email.unique' => 'This department email is already taken.',
             'code.required' => 'Department code is required.',
             'code.unique' => 'This department code is already taken.',
-            'code.max' => 'Department code cannot exceed 50 characters.',
+            'code.max' => 'Department code cannot exceed 4 characters.',
             'parent_id.exists' => 'Selected parent department does not exist.',
             'manager_id.exists' => 'Selected manager does not exist.',
             'budget.numeric' => 'Budget must be a valid number.',
             'budget.min' => 'Budget cannot be negative.',
             'cost_center.max' => 'Cost center cannot exceed 255 characters.',
             'location.max' => 'Location cannot exceed 255 characters.',
+            'status.in' => 'Invalid department status selected.',
         ];
     }
 
@@ -62,19 +72,6 @@ class StoreDepartmentRequest extends FormRequest
             'parent_id' => 'parent department',
             'manager_id' => 'department manager',
             'cost_center' => 'cost center',
-            'is_active' => 'status',
         ];
-    }
-
-    /**
-     * Prepare the data for validation.
-     */
-    protected function prepareForValidation(): void
-    {
-        if ($this->has('is_active') && is_null($this->is_active)) {
-            $this->merge([
-                'is_active' => true,
-            ]);
-        }
     }
 }

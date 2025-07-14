@@ -5,6 +5,8 @@ namespace App\Tenant\Modules\HR\DataTables;
 use App\Support\DataTables\AbstractDataTable;
 use App\Tenant\Modules\HR\Enum\EmploymentType;
 use App\Tenant\Modules\HR\Enum\PositionLevel;
+use App\Tenant\Modules\HR\Enum\PositionStatus;
+use App\Tenant\Modules\HR\Models\Department;
 use App\Tenant\Modules\HR\Models\Position;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Query\Builder as QueryBuilder;
@@ -18,8 +20,7 @@ class PositionDataTable extends AbstractDataTable
      */
     public function query(): EloquentBuilder|QueryBuilder
     {
-        return Position::query()
-            ->with(['department:id,name']);
+        return Position::query()->with(['department:id,name']);
     }
 
     /**
@@ -30,10 +31,9 @@ class PositionDataTable extends AbstractDataTable
     public function build(): void
     {
         $this->addColumn('id', 'ID', [
-            'className' => 'font-medium',
-            'visible' => false
+            'visible' => false,
+            'exportable' => false,
         ])
-
             ->addColumn('title', 'Title', [
                 'searchable' => true,
                 'orderable' => true,
@@ -42,52 +42,86 @@ class PositionDataTable extends AbstractDataTable
                 relationship: 'department',
                 field: 'name',
                 title: 'Department',
-                options: [
-                    'searchable' => true,
-                    'orderable' => true,
-                ],
-                relatedTable: 'departments',
-                foreignKey: 'department_id',
-                relatedKey: 'id'
             )
-            ->addColumn('employment_type', 'Type', [
+            ->addEnumColumn('employment_type', 'Employment', EmploymentType::class, [
                 'searchable' => true,
                 'orderable' => true,
-                'className' => 'capitalize'
             ])
-            ->addColumn('position_level', 'Level', [
+            ->addEnumColumn('position_level', 'Level', PositionLevel::class, [
                 'searchable' => true,
                 'orderable' => true,
-                'className' => 'capitalize'
+                'className' => 'capitalize',
             ])
-            ->addBadgeColumn('status', 'Status', [
-                'searchable' => true,
-                'orderable' => true,
-            ], [
+
+            ->addBadgeColumn('status', 'Status', [], [
                 'active' => [
                     'color' => 'default',
-                    'icon' => 'CheckCircle'
+                    'icon' => 'CheckCircle',
                 ],
                 'inactive' => [
                     'color' => 'secondary',
-                    'icon' => 'CircleOff'
+                    'icon' => 'CircleOff',
                 ],
                 'default' => [
                     'color' => 'secondary',
-                    'icon' => 'CircleOff'
-                ]
+                    'icon' => 'CircleOff',
+                ],
             ])
             ->addDateColumn('created_at', 'Created At', 'M j, Y g:i a', [
                 'searchable' => false,
                 'orderable' => true,
-                'className' => 'text-sm text-muted-foreground'
+                'className' => 'text-sm text-muted-foreground',
             ])
-            ->addActionColumn('actions', 'Actions', [
-                ['name' => 'view', 'icon' => 'Eye'],
-                ['name' => 'edit', 'icon' => 'Edit'],
-                ['name' => 'delete', 'icon' => 'Trash2']
-            ]);
+            ->addActionColumn('actions', 'Actions', function ($position) {
+                return match ($position->status) {
+                    PositionStatus::ACTIVE => [
+                        ['name' => 'view', 'icon' => 'Eye', 'label' => 'View'],
+                        ['name' => 'edit', 'icon' => 'Edit', 'label' => 'Edit'],
+                        ['name' => 'deactivate', 'icon' => 'CircleOff', 'label' => 'Deactivate'],
+                        ['name' => 'delete', 'icon' => 'Trash2', 'label' => 'Delete'],
+                    ],
+                    PositionStatus::INACTIVE => [
+                        ['name' => 'view', 'icon' => 'Eye', 'label' => 'View'],
+                        ['name' => 'edit', 'icon' => 'Edit', 'label' => 'Edit'],
+                        ['name' => 'activate', 'icon' => 'CheckCircle', 'label' => 'Activate'],
+                        ['name' => 'delete', 'icon' => 'Trash2', 'label' => 'Delete'],
+                    ],
+                    default => [
+                        ['name' => 'view', 'icon' => 'Eye', 'label' => 'View'],
+                        ['name' => 'edit', 'icon' => 'Edit', 'label' => 'Edit'],
+                        ['name' => 'delete', 'icon' => 'Trash2', 'label' => 'Delete'],
+                    ]
+                };
+            });
+    }
 
+    /**
+     * Get bulk actions for the DataTable.
+     *
+     * @return array
+     */
+    public function bulkActions(): array
+    {
+        return [
+            [
+                'label' => 'Activate',
+                'value' => 'activate',
+                'icon' => 'CheckCircle',
+                'variant' => 'default',
+            ],
+            [
+                'label' => 'Deactivate',
+                'value' => 'deactivate',
+                'icon' => 'CircleOff',
+                'variant' => 'outline',
+            ],
+            [
+                'label' => 'Delete',
+                'value' => 'delete',
+                'icon' => 'Trash2',
+                'variant' => 'destructive',
+            ],
+        ];
     }
 
     /**
@@ -116,12 +150,12 @@ class PositionDataTable extends AbstractDataTable
             [
                 'label' => 'Active',
                 'value' => 'active',
-                'icon' => 'CheckCircle'
+                'icon' => 'CheckCircle',
             ],
             [
                 'label' => 'Inactive',
                 'value' => 'inactive',
-                'icon' => 'CircleOff'
+                'icon' => 'CircleOff',
             ],
         ];
     }
@@ -133,12 +167,10 @@ class PositionDataTable extends AbstractDataTable
      */
     protected function getEmploymentTypeOptions(): array
     {
-        return collect(EmploymentType::cases())->map(function ($case) {
-            return [
-                'label' => $case->label(),
-                'value' => $case->value,
-            ];
-        })->toArray();
+        return collect(EmploymentType::cases())->map(fn($case) => [
+            'label' => $case->label(),
+            'value' => $case->value,
+        ])->toArray();
     }
 
     /**
@@ -148,12 +180,10 @@ class PositionDataTable extends AbstractDataTable
      */
     protected function getPositionLevelOptions(): array
     {
-        return collect(PositionLevel::cases())->map(function ($case) {
-            return [
-                'label' => $case->label(),
-                'value' => $case->value,
-            ];
-        })->toArray();
+        return collect(PositionLevel::cases())->map(fn($case) => [
+            'label' => $case->label(),
+            'value' => $case->value,
+        ])->toArray();
     }
 
     /**
@@ -163,14 +193,12 @@ class PositionDataTable extends AbstractDataTable
      */
     protected function getDepartmentOptions(): array
     {
-        return \App\Tenant\Modules\HR\Models\Department::active()
+        return Department::active()
             ->get(['id', 'name'])
-            ->map(function ($department) {
-                return [
-                    'label' => $department->name,
-                    'value' => $department->name,
-                ];
-            })
+            ->map(fn($department) => [
+                'label' => $department->name,
+                'value' => $department->name,
+            ])
             ->toArray();
     }
 

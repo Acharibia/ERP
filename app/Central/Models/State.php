@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Stancl\Tenancy\Database\Concerns\CentralConnection;
 
-class State extends Model
+class State extends CentralModel
 {
     use HasFactory, CentralConnection;
 
@@ -46,5 +46,10 @@ class State extends Model
     public function users(): HasMany
     {
         return $this->hasMany(User::class);
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
     }
 }

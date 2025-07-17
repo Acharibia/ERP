@@ -18,7 +18,7 @@ export function AppShell({ children, variant = 'header' }: AppShellProps) {
     };
 
     if (variant === 'header') {
-        return <div className="flex min-h-screen w-full flex-col overflow-x-hidden">{children}</div>;
+        return <div className="flex min-h-screen w-full flex-col">{children}</div>;
     }
 
     return (

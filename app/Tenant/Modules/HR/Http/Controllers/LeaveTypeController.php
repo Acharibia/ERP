@@ -23,8 +23,10 @@ class LeaveTypeController extends Controller
     /**
      * Update the specified leave type in storage.
      */
-    public function update(UpdateLeaveTypeRequest $request, LeaveType $leaveType)
+    public function update(UpdateLeaveTypeRequest $request, $id)
     {
+
+        $leaveType = LeaveType::findOrFail($id);
         $leaveType->update($request->validated());
 
         return redirect()->route('modules.hr.leaves.index')
@@ -34,8 +36,9 @@ class LeaveTypeController extends Controller
     /**
      * Remove the specified leave type from storage.
      */
-    public function destroy(LeaveType $leaveType)
+    public function destroy(LeaveType $id)
     {
+        $leaveType = LeaveType::findOrFail($id);
         $leaveType->delete();
 
         return back()->with('success', 'Leave type deleted successfully.');

@@ -49,7 +49,7 @@ const DeleteLeaveTypeDialog = forwardRef<DeleteLeaveTypeDialogRef, Props>(({ onD
                 ...(isBulk ? [{ name: 'ids', type: 'hidden' as const, value: leaveTypes.map((lt) => lt.id) }] : []),
                 {
                     name: 'password',
-                    type: 'input',
+                    type: 'password',
                     label: 'Password',
                     placeholder: 'Enter your password to confirm',
                     autoComplete: 'current-password',

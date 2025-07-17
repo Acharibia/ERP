@@ -11,7 +11,7 @@ import { FormEventHandler, forwardRef, useImperativeHandle, useRef, useState } f
 import { toast } from 'sonner';
 
 type Method = 'post' | 'put' | 'patch' | 'delete';
-type FieldType = 'input' | 'textarea' | 'switch' | 'combobox' | 'hidden';
+type FieldType = 'input' | 'textarea' | 'switch' | 'combobox' | 'hidden' | 'password';
 
 type BaseField = {
     name: string;
@@ -81,19 +81,10 @@ const ConfirmActionDialog = forwardRef<ConfirmActionDialogRef, ConfirmActionDial
 
     const initialData = Object.fromEntries(fields.map((f) => [f.name, f.value ?? (f.type === 'switch' ? false : '')]));
 
-    const {
-        data,
-        setData,
-        post,
-        put,
-        patch,
-        delete: destroy,
-        reset,
-        processing,
-        errors,
-        clearErrors,
-        setError,
-    } = useForm<Record<string, any>>(initialData);
+    type FormValue = string | number | boolean | string[] | number[] | (string | number)[] | null;
+    type FormData = Record<string, FormValue>;
+
+    const { data, setData, post, put, patch, delete: destroy, reset, processing, errors, clearErrors, setError } = useForm<FormData>(initialData);
 
     const fieldRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
@@ -181,10 +172,12 @@ const ConfirmActionDialog = forwardRef<ConfirmActionDialogRef, ConfirmActionDial
                         <div key={field.name} className="grid gap-2">
                             {field.label && field.type !== 'switch' && <Label htmlFor={field.name}>{field.label}</Label>}
 
-                            {field.type === 'input' && (
+                            {['input', 'hidden', 'password'].includes(field.type) && (
                                 <Input
                                     id={field.name}
+                                    type={field.type === 'password' ? 'password' : field.type === 'hidden' ? 'hidden' : 'text'}
                                     value={String(data[field.name])}
+                                    className={errors[field.name] ? 'border-red-500' : ''}
                                     onChange={(e) => setData(field.name, e.target.value)}
                                     placeholder={field.placeholder}
                                     autoComplete={field.autoComplete}
@@ -193,23 +186,11 @@ const ConfirmActionDialog = forwardRef<ConfirmActionDialogRef, ConfirmActionDial
                                     }}
                                 />
                             )}
-
-                            {field.type === 'hidden' && (
-                                <Input
-                                    id={field.name}
-                                    type="hidden"
-                                    value={String(data[field.name])}
-                                    onChange={(e) => setData(field.name, e.target.value)}
-                                    ref={(el) => {
-                                        fieldRefs.current[field.name] = el;
-                                    }}
-                                />
-                            )}
-
                             {field.type === 'textarea' && (
                                 <Textarea
                                     id={field.name}
                                     value={String(data[field.name])}
+                                    className={errors[field.name] ? 'border-red-500' : ''}
                                     onChange={(e) => setData(field.name, e.target.value)}
                                     placeholder={field.placeholder}
                                 />
@@ -225,6 +206,7 @@ const ConfirmActionDialog = forwardRef<ConfirmActionDialogRef, ConfirmActionDial
                             {field.type === 'combobox' && 'options' in field && (
                                 <Combobox
                                     options={field.options}
+                                    className={errors[field.name] ? 'border-red-500' : ''}
                                     value={data[field.name] as string | number}
                                     onChange={(val) => setData(field.name, String(val))}
                                     optionLabel="label"

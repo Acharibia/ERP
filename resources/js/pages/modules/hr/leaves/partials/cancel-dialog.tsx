@@ -47,10 +47,16 @@ const CancelLeaveDialog = forwardRef<CancelLeaveDialogRef, Props>(({ onCancelled
                 ...(isBulk ? [{ name: 'ids', type: 'hidden' as const, value: leaves.map((l) => l.id) }] : []),
                 {
                     name: 'password',
-                    type: 'input',
+                    type: 'password',
                     label: 'Password',
                     placeholder: 'Enter your password to confirm',
                     autoComplete: 'current-password',
+                },
+                {
+                    name: 'comment',
+                    type: 'textarea',
+                    label: 'Reason for Cancellation (optional)',
+                    placeholder: 'Provide a reason for cancellation...',
                 },
             ]}
             confirmText="Yes, cancel"

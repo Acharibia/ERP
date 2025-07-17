@@ -4,7 +4,8 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     /**
      * Run the migrations.
      */
@@ -18,9 +19,9 @@ return new class extends Migration {
             $table->date('end_date');
             $table->decimal('total_days', 5, 1);
             $table->text('reason')->nullable();
-            $table->string('priority')->default('normal'); // low, normal, high, urgent
-            $table->string('status')->default('pending'); // pending, approved, rejected, cancelled
-            $table->foreignId('reviewed_by')->nullable();
+            $table->enum('priority', ['low', 'normal', 'high', 'urgent'])->default('normal');
+            $table->enum('status', ['pending', 'approved', 'rejected', 'cancelled'])->default('pending');
+            $table->foreignId('reviewed_by')->nullable()->constrained('users')->nullOnDelete();
             $table->dateTime('reviewed_at')->nullable();
             $table->text('comment')->nullable();
             $table->timestamps();

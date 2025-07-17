@@ -1,14 +1,12 @@
 <?php
-
 namespace App\Tenant\Modules\HR\Enum;
 
-enum EmploymentType: string
-{
+enum EmploymentType: string {
     case FULL_TIME = 'full_time';
     case PART_TIME = 'part_time';
-    case CONTRACT = 'contract';
+    case CONTRACT  = 'contract';
     case TEMPORARY = 'temporary';
-    case INTERN = 'intern';
+    case INTERN    = 'intern';
 
     public function label(): string
     {
@@ -24,8 +22,8 @@ enum EmploymentType: string
     public static function options(): array
     {
         return collect(self::cases())->map(fn($case) => [
-            'id' => $case->value,
-            'name' => $case->label(),
+            'id'    => $case->value,
+            'name'  => $case->label(),
             'value' => $case->value,
         ])->toArray();
     }

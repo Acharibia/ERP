@@ -18,7 +18,7 @@ const EditLeaveTypeDialog = forwardRef<EditLeaveTypeDialogRef>((_, ref) => {
     const [open, setOpen] = useState(false);
     const [currentId, setCurrentId] = useState<number | null>(null);
 
-    const { data, setData, put, processing, reset, errors } = useForm<LeaveTypeForm>({
+    const { data, setData, patch, processing, reset, errors } = useForm<LeaveTypeForm>({
         name: '',
         code: '',
         description: '',
@@ -56,7 +56,7 @@ const EditLeaveTypeDialog = forwardRef<EditLeaveTypeDialogRef>((_, ref) => {
         e.preventDefault();
         if (currentId === null) return;
 
-        put(route('modules.hr.leave-types.update', { id: currentId }), {
+        patch(route('modules.hr.leave-types.update', { id: currentId }), {
             onSuccess: () => {
                 setOpen(false);
                 reset();

@@ -80,6 +80,11 @@ const hrData = {
             ],
         },
         {
+            title: 'Leaves',
+            url: '/modules/hr/leaves',
+            icon: Medal,
+        },
+        {
             title: 'Training',
             url: '#',
             icon: BookOpen,
@@ -111,9 +116,18 @@ const hrData = {
                     title: 'Attendance',
                     url: '/modules/hr/attendance',
                 },
+
                 {
-                    title: 'Leaves',
-                    url: '/modules/hr/leaves',
+                    title: 'Shifts',
+                    url: '/modules/hr/shifts',
+                },
+                {
+                    title: 'Schedules',
+                    url: '/modules/hr/schedules',
+                },
+                {
+                    title: 'Shift Preferences',
+                    url: '/modules/hr/shift-preferences',
                 },
             ],
         },

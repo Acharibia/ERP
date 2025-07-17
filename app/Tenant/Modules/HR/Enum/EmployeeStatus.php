@@ -1,10 +1,8 @@
 <?php
-
 namespace App\Tenant\Modules\HR\Enum;
 
-enum EmployeeStatus: string
-{
-    case DRAFT = 'draft';
+enum EmployeeStatus: string {
+    case DRAFT     = 'draft';
     case FINALIZED = 'finalized';
 
     /**
@@ -25,8 +23,8 @@ enum EmployeeStatus: string
     {
         return collect(self::cases())->map(function ($case) {
             return [
-                'id' => $case->value,
-                'name' => $case->label(),
+                'id'    => $case->value,
+                'name'  => $case->label(),
                 'value' => $case->value,
             ];
         })->toArray();

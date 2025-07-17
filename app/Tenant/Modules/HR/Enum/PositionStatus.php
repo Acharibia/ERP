@@ -1,10 +1,8 @@
 <?php
-
 namespace App\Tenant\Modules\HR\Enum;
 
-enum PositionStatus: string
-{
-    case ACTIVE = 'active';
+enum PositionStatus: string {
+    case ACTIVE   = 'active';
     case INACTIVE = 'inactive';
 
     /**
@@ -25,8 +23,8 @@ enum PositionStatus: string
     {
         return collect(self::cases())->map(function ($case) {
             return [
-                'id' => $case->value,
-                'name' => $case->label(),
+                'id'    => $case->value,
+                'name'  => $case->label(),
                 'value' => $case->value,
             ];
         })->toArray();
@@ -47,5 +45,5 @@ enum PositionStatus: string
     {
         return collect(self::cases())->first(fn($case) => $case->value === $value);
     }
-    
+
 }

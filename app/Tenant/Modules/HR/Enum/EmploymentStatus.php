@@ -1,14 +1,12 @@
 <?php
-
 namespace App\Tenant\Modules\HR\Enum;
 
-enum EmploymentStatus: string
-{
-    case ACTIVE = 'active';
-    case INACTIVE = 'inactive';
-    case ON_LEAVE = 'on_leave';
+enum EmploymentStatus: string {
+    case ACTIVE     = 'active';
+    case INACTIVE   = 'inactive';
+    case ON_LEAVE   = 'on_leave';
     case TERMINATED = 'terminated';
-    case PROBATION = 'probation';
+    case PROBATION  = 'probation';
 
     public function label(): string
     {
@@ -24,8 +22,8 @@ enum EmploymentStatus: string
     public static function options(): array
     {
         return collect(self::cases())->map(fn($case) => [
-            'id' => $case->value,
-            'name' => $case->label(),
+            'id'    => $case->value,
+            'name'  => $case->label(),
             'value' => $case->value,
         ])->toArray();
     }

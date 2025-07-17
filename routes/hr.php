@@ -1,12 +1,18 @@
 <?php
 
-use App\Tenant\Modules\HR\Http\Controllers\LeaveTypeController;
-use App\Tenant\Modules\HR\Http\Controllers\PositionController;
+use App\Tenant\Modules\HR\Http\Controllers\AttendanceController;
 use App\Tenant\Modules\HR\Http\Controllers\DashboardController;
 use App\Tenant\Modules\HR\Http\Controllers\DataTableController;
 use App\Tenant\Modules\HR\Http\Controllers\DepartmentController;
 use App\Tenant\Modules\HR\Http\Controllers\EmployeeController;
+use App\Tenant\Modules\HR\Http\Controllers\EmployeeShiftRotationController;
 use App\Tenant\Modules\HR\Http\Controllers\LeaveRequestController;
+use App\Tenant\Modules\HR\Http\Controllers\LeaveTypeController;
+use App\Tenant\Modules\HR\Http\Controllers\PositionController;
+use App\Tenant\Modules\HR\Http\Controllers\ScheduleController;
+use App\Tenant\Modules\HR\Http\Controllers\ShiftController;
+use App\Tenant\Modules\HR\Http\Controllers\ShiftPreferenceController;
+use App\Tenant\Modules\HR\Http\Controllers\ShiftRotationController;
 
 Route::prefix('hr')->name('hr.')->group(function () {
 
@@ -28,7 +34,6 @@ Route::prefix('hr')->name('hr.')->group(function () {
         Route::delete('/{id}/destroy', [EmployeeController::class, 'destroy'])->name('destroy');
     });
 
-
     Route::prefix('departments')->name('departments.')->group(function () {
         Route::get('', [DepartmentController::class, 'index'])->name('index');
         Route::get('/create', [DepartmentController::class, 'create'])->name('create');
@@ -45,7 +50,6 @@ Route::prefix('hr')->name('hr.')->group(function () {
         Route::patch('/bulk-suspend', [DepartmentController::class, 'bulkSuspend'])->name('bulk-suspend');
         Route::patch('/bulk-deactivate', [DepartmentController::class, 'bulkDeactivate'])->name('bulk-deactivate');
     });
-
 
     Route::prefix('positions')->name('positions.')->group(function () {
         Route::get('/', [PositionController::class, 'index'])->name('index');
@@ -65,29 +69,86 @@ Route::prefix('hr')->name('hr.')->group(function () {
 
     Route::prefix('leave-types')->name('leave-types.')->group(function () {
         Route::post('leave-types', [LeaveTypeController::class, 'store'])->name('store');
-        Route::patch('leave-types/{leaveType}', [LeaveTypeController::class, 'update'])->name('update');
-        Route::delete('leave-types/{leaveType}', [LeaveTypeController::class, 'destroy'])->name('destroy');
+        Route::patch('leave-types/{id}', [LeaveTypeController::class, 'update'])->name('update');
+        Route::delete('leave-types/{id}', [LeaveTypeController::class, 'destroy'])->name('destroy');
     });
 
     Route::prefix('leaves')->name('leaves.')->group(function () {
         Route::get('/', [LeaveRequestController::class, 'index'])->name('index');
         Route::get('/create', [LeaveRequestController::class, 'create'])->name('create');
         Route::post('/', [LeaveRequestController::class, 'store'])->name('store');
-        Route::get('/{leave}', [LeaveRequestController::class, 'show'])->name('show');
-        Route::get('/{leave}/edit', [LeaveRequestController::class, 'edit'])->name('edit');
-        Route::patch('/{leave}', [LeaveRequestController::class, 'update'])->name('update');
-        Route::delete('/{leave}', [LeaveRequestController::class, 'destroy'])->name('destroy');
+        Route::get('/{id}', [LeaveRequestController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [LeaveRequestController::class, 'edit'])->name('edit');
+        Route::patch('/{id}', [LeaveRequestController::class, 'update'])->name('update');
+        Route::delete('/{id}', [LeaveRequestController::class, 'destroy'])->name('destroy');
 
-        Route::patch('/{leave}/approve', [LeaveRequestController::class, 'approve'])->name('approve');
-        Route::patch('/{leave}/reject', [LeaveRequestController::class, 'reject'])->name('reject');
+        Route::patch('/{id}/approve', [LeaveRequestController::class, 'approve'])->name('approve');
+        Route::patch('/{id}/reject', [LeaveRequestController::class, 'reject'])->name('reject');
+        Route::patch('/{id}/cancel', [LeaveRequestController::class, 'cancel'])->name('cancel');
 
         Route::patch('bulk-approve', [LeaveRequestController::class, 'bulkApprove'])->name('bulk-approve');
         Route::patch('bulk-reject', [LeaveRequestController::class, 'bulkReject'])->name('bulk-reject');
         Route::post('bulk-delete', [LeaveRequestController::class, 'bulkDelete'])->name('bulk-delete');
     });
 
+    Route::prefix('attendance')->name('attendance.')->group(function () {
+        Route::get('/', [AttendanceController::class, 'index'])->name('index');
+        Route::get('/create', [AttendanceController::class, 'create'])->name('create');
+        Route::post('/', [AttendanceController::class, 'store'])->name('store');
+        Route::get('/{id}', [AttendanceController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [AttendanceController::class, 'edit'])->name('edit');
+        Route::patch('/{id}', [AttendanceController::class, 'update'])->name('update');
+        Route::delete('/{id}', [AttendanceController::class, 'destroy'])->name('destroy');
+    });
 
+    Route::prefix('shifts')->name('shifts.')->group(function () {
+        Route::get('/', [ShiftController::class, 'index'])->name('index');
+        Route::get('/create', [ShiftController::class, 'create'])->name('create');
+        Route::post('/', [ShiftController::class, 'store'])->name('store');
+        Route::get('/{id}', [ShiftController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [ShiftController::class, 'edit'])->name('edit');
+        Route::patch('/{id}', [ShiftController::class, 'update'])->name('update');
+        Route::delete('/{id}', [ShiftController::class, 'destroy'])->name('destroy');
+    });
 
+    Route::prefix('schedules')->name('schedules.')->group(function () {
+        Route::get('/', [ScheduleController::class, 'index'])->name('index');
+        Route::get('/create', [ScheduleController::class, 'create'])->name('create');
+        Route::post('/', [ScheduleController::class, 'store'])->name('store');
+        Route::get('/{id}', [ScheduleController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [ScheduleController::class, 'edit'])->name('edit');
+        Route::patch('/{id}', [ScheduleController::class, 'update'])->name('update');
+        Route::delete('/{id}', [ScheduleController::class, 'destroy'])->name('destroy');
+    });
+
+    Route::prefix('shift-preferences')->name('shift-preferences.')->group(function () {
+        Route::get('/', [ShiftPreferenceController::class, 'index'])->name('index');
+        Route::get('/create', [ShiftPreferenceController::class, 'create'])->name('create');
+        Route::post('/', [ShiftPreferenceController::class, 'store'])->name('store');
+        Route::get('/{id}', [ShiftPreferenceController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [ShiftPreferenceController::class, 'edit'])->name('edit');
+        Route::patch('/{id}', [ShiftPreferenceController::class, 'update'])->name('update');
+        Route::delete('/{id}', [ShiftPreferenceController::class, 'destroy'])->name('destroy');
+    });
+
+    Route::prefix('employee-shift-rotations')->name('employee-shift-rotations.')->group(function () {
+        Route::get('/', [EmployeeShiftRotationController::class, 'index'])->name('index');
+        Route::get('/create', [EmployeeShiftRotationController::class, 'create'])->name('create');
+        Route::post('/', [EmployeeShiftRotationController::class, 'store'])->name('store');
+        Route::get('/{id}', [EmployeeShiftRotationController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [EmployeeShiftRotationController::class, 'edit'])->name('edit');
+        Route::patch('/{id}', [EmployeeShiftRotationController::class, 'update'])->name('update');
+        Route::delete('/{id}', [EmployeeShiftRotationController::class, 'destroy'])->name('destroy');
+    });
+
+    Route::prefix('shift-rotations')->name('shift-rotations.')->group(function () {
+        Route::get('/{employeeShiftRotationId}', [ShiftRotationController::class, 'index'])->name('index');
+        Route::get('/{employeeShiftRotationId}/create', [ShiftRotationController::class, 'create'])->name('create');
+        Route::post('/{employeeShiftRotationId}', [ShiftRotationController::class, 'store'])->name('store');
+        Route::get('/edit/{id}', [ShiftRotationController::class, 'edit'])->name('edit');
+        Route::patch('/{id}', [ShiftRotationController::class, 'update'])->name('update');
+        Route::delete('/{id}', [ShiftRotationController::class, 'destroy'])->name('destroy');
+    });
 
     Route::prefix('datatable')->name('datatable.')->group(function () {
         Route::post('{dataTable}', [DataTableController::class, 'process'])->name('process');

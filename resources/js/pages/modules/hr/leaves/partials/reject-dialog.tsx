@@ -47,10 +47,16 @@ const RejectLeaveDialog = forwardRef<RejectLeaveDialogRef, Props>(({ onRejected 
                 ...(isBulk ? [{ name: 'ids', type: 'hidden' as const, value: leaves.map((l) => l.id) }] : []),
                 {
                     name: 'password',
-                    type: 'input',
+                    type: 'password',
                     label: 'Password',
                     placeholder: 'Enter your password to confirm',
                     autoComplete: 'current-password',
+                },
+                {
+                    name: 'comment',
+                    type: 'textarea',
+                    label: 'Reason for Rejection (optional)',
+                    placeholder: 'Provide a reason for rejecting the leave request...',
                 },
             ]}
             confirmText="Yes, reject"

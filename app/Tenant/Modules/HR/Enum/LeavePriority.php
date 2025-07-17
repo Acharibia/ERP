@@ -1,12 +1,10 @@
 <?php
-
 namespace App\Tenant\Modules\HR\Enum;
 
-enum LeavePriority: string
-{
-    case LOW = 'low';
+enum LeavePriority: string {
+    case LOW    = 'low';
     case NORMAL = 'normal';
-    case HIGH = 'high';
+    case HIGH   = 'high';
     case URGENT = 'urgent';
 
     public function label(): string
@@ -22,8 +20,8 @@ enum LeavePriority: string
     public static function options(): array
     {
         return collect(self::cases())->map(fn($case) => [
-            'id' => $case->value,
-            'name' => $case->label(),
+            'id'    => $case->value,
+            'name'  => $case->label(),
             'value' => $case->value,
         ])->toArray();
     }

@@ -6,6 +6,7 @@ use App\Tenant\Modules\HR\Enum\LeaveTypeStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Tenant\Modules\HR\Observers\LeaveTypeObserver;
 
 class LeaveType extends Model
 {
@@ -33,6 +34,11 @@ class LeaveType extends Model
         'max_carry_forward_days' => 'decimal:1',
         'status' => LeaveTypeStatus::class,
     ];
+
+    protected static function booted()
+    {
+        static::observe(LeaveTypeObserver::class);
+    }
 
     /*
     |--------------------------------------------------------------------------

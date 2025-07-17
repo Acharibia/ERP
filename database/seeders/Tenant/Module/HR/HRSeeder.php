@@ -1,5 +1,4 @@
 <?php
-
 namespace Database\Seeders\Tenant\Module\HR;
 
 use Illuminate\Database\Seeder;
@@ -15,6 +14,7 @@ class HRSeeder extends Seeder
     {
         $this->call([
             LeaveTypeSeeder::class,
+            ShiftSeeder::class,
         ]);
     }
 }

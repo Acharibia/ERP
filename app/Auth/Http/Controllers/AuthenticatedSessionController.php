@@ -1,9 +1,8 @@
 <?php
-
 namespace App\Auth\Http\Controllers;
 
-use App\Central\Http\Controllers\Controller;
 use App\Auth\Http\Requests\LoginRequest;
+use App\Central\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -20,7 +19,7 @@ class AuthenticatedSessionController extends Controller
     {
         return Inertia::render('auth/login', [
             'canResetPassword' => Route::has('password.request'),
-            'status' => $request->session()->get('status'),
+            'status'           => $request->session()->get('status'),
         ]);
     }
 

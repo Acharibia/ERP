@@ -1,7 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useDateFormatter } from '@/hooks/use-date-formatter';
-import { EmployeeWorkExperienceInfo } from '@/types/employee';
+import { EmployeeWorkExperienceInfo } from '@/types/hr/employee';
 import InfoBlock from '../ui/info-block';
 
 type Props = {

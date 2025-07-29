@@ -1,16 +1,15 @@
 <?php
-
 namespace App\Central\Http\Controllers;
 
 use App\Central\Http\Controllers\Controller;
 use App\Support\DataTables\AbstractDataTable;
+use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
-use ReflectionClass;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Str;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-use Barryvdh\DomPDF\Facade\Pdf as PDF;
+use ReflectionClass;
 
 class DataTableController extends Controller
 {
@@ -58,14 +57,14 @@ class DataTableController extends Controller
     protected function resolveDataTable(string $dataTable): AbstractDataTable
     {
         // Format class name if it doesn't include namespace
-        if (!Str::contains($dataTable, '\\')) {
+        if (! Str::contains($dataTable, '\\')) {
             // Attempt to resolve from multiple possible namespaces
             $possibleNamespaces = [
                 "App\\DataTables\\{$dataTable}",
                 "App\\Admins\\DataTables\\{$dataTable}",
                 "App\\Reseller\\DataTables\\{$dataTable}",
                 "App\\Business\\DataTables\\{$dataTable}",
-                "App\\Tenant\\Modules\\HR\\DataTables\\{$dataTable}",
+                "App\\Tenant\\HR\\DataTables\\{$dataTable}",
             ];
 
             foreach ($possibleNamespaces as $fullyQualifiedClassName) {
@@ -77,13 +76,13 @@ class DataTableController extends Controller
         }
 
         // Check if the class exists
-        if (!class_exists($dataTable)) {
+        if (! class_exists($dataTable)) {
             throw new \Exception("DataTable class not found: {$dataTable}");
         }
 
         // Check if the class is a valid DataTable
         $reflection = new ReflectionClass($dataTable);
-        if (!$reflection->isSubclassOf(AbstractDataTable::class)) {
+        if (! $reflection->isSubclassOf(AbstractDataTable::class)) {
             throw new \Exception("Class is not a valid DataTable: {$dataTable}");
         }
 
@@ -91,17 +90,14 @@ class DataTableController extends Controller
         return app($dataTable);
     }
 
-
-
     /**
      * Export data from a DataTable.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response|\Symfony\Component\HttpFoundation\StreamedResponse|\Symfony\Component\HttpFoundation\BinaryFileResponse
      */
     public function export(Request $request)
     {
-        $format = $request->input('format', 'csv');
+        $format    = $request->input('format', 'csv');
         $className = $request->input('class');
 
         $dataTable = $this->resolveDataTable($className);
@@ -111,10 +107,11 @@ class DataTableController extends Controller
 
         // Apply filters
         $filters = json_decode($request->input('filters', '{}'), true);
-        if (!empty($filters)) {
+        if (! empty($filters)) {
             foreach ($filters as $column => $value) {
-                if (empty($value))
+                if (empty($value)) {
                     continue;
+                }
 
                 if (str_contains($column, '.')) {
                     // Handle relationship columns
@@ -162,10 +159,10 @@ class DataTableController extends Controller
 
         // Apply sorting
         $sort = json_decode($request->input('sort', '[]'), true);
-        if (!empty($sort)) {
+        if (! empty($sort)) {
             foreach ($sort as $sortItem) {
                 if (isset($sortItem['id']) && isset($sortItem['desc'])) {
-                    $column = $sortItem['id'];
+                    $column    = $sortItem['id'];
                     $direction = $sortItem['desc'] ? 'desc' : 'asc';
                     $query->orderBy($column, $direction);
                 }
@@ -205,12 +202,12 @@ class DataTableController extends Controller
     private function prepareExportData($dataTable, $items, array $visibleColumns)
     {
         $columns = $dataTable->getColumns();
-        $result = [];
+        $result  = [];
 
         // Prepare headers (only for visible and exportable columns)
         $headers = [];
         foreach ($columns as $key => $column) {
-            $name = $column['data'] ?? $key;
+            $name       = $column['data'] ?? $key;
             $exportable = $column['exportable'] ?? true;
 
             if (in_array($name, $visibleColumns) && $exportable) {
@@ -223,7 +220,7 @@ class DataTableController extends Controller
         foreach ($items as $item) {
             $row = [];
             foreach ($columns as $key => $column) {
-                $name = $column['data'] ?? $key;
+                $name       = $column['data'] ?? $key;
                 $exportable = $column['exportable'] ?? true;
 
                 // Only include visible and exportable columns
@@ -239,9 +236,9 @@ class DataTableController extends Controller
                             $value = $item->{$name} ?? null;
 
                             // Handle date columns
-                            if (($column['type'] ?? '') === 'date' && !empty($value)) {
+                            if (($column['type'] ?? '') === 'date' && ! empty($value)) {
                                 $format = $column['dateFormat'] ?? 'Y-m-d H:i';
-                                $value = \Carbon\Carbon::parse($value)->format($format);
+                                $value  = \Carbon\Carbon::parse($value)->format($format);
                             }
                         }
                     }
@@ -283,7 +280,7 @@ class DataTableController extends Controller
             }
             fclose($output);
         }, $filename, [
-            'Content-Type' => 'text/csv',
+            'Content-Type'        => 'text/csv',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ]);
     }
@@ -298,7 +295,7 @@ class DataTableController extends Controller
     private function exportAsExcel(array $data, string $filename)
     {
         $spreadsheet = new Spreadsheet();
-        $sheet = $spreadsheet->getActiveSheet();
+        $sheet       = $spreadsheet->getActiveSheet();
 
         // Add data to the sheet
         foreach ($data as $rowIndex => $row) {
@@ -315,7 +312,7 @@ class DataTableController extends Controller
 
         // Write the spreadsheet to a temporary file
         $tempFile = tempnam(sys_get_temp_dir(), 'excel_');
-        $writer = new Xlsx($spreadsheet);
+        $writer   = new Xlsx($spreadsheet);
         $writer->save($tempFile);
 
         // Set the filename
@@ -323,7 +320,7 @@ class DataTableController extends Controller
 
         // Return the file as a download
         return response()->download($tempFile, $filename, [
-            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Type'        => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ])->deleteFileAfterSend(true);
     }
@@ -340,14 +337,14 @@ class DataTableController extends Controller
         // Assumes you have a PDF library like DomPDF, mPDF, etc.
         // Example uses Laravel's PDF facade (you need to install a package like barryvdh/laravel-dompdf)
 
-        // Extract headers and rows
+                                       // Extract headers and rows
         $headers = array_shift($data); // First row is headers
-        $rows = $data;
+        $rows    = $data;
 
         $pdf = PDF::loadView('exports.datatable', [
             'headers' => $headers,
-            'rows' => $rows,
-            'title' => $filename
+            'rows'    => $rows,
+            'title'   => $filename,
         ]);
 
         $filename = $filename . '-' . date('Y-m-d-His') . '.pdf';

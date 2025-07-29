@@ -2,7 +2,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import InfoBlock from '@/components/ui/info-block';
 import { useDateFormatter } from '@/hooks/use-date-formatter';
-import { EmployeeEmploymentInfo } from '@/types/employee';
+import { EmployeeEmploymentInfo } from '@/types/hr/employee';
 
 type Props = {
     employment: EmployeeEmploymentInfo;

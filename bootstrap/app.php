@@ -19,7 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withCommands([
-        __DIR__.'/../app/Tenant/Modules/HR/Console/Commands',
+        __DIR__.'/../app/Tenant/HR/Console/Commands',
     ])
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->encryptCookies(except: ['appearance']);

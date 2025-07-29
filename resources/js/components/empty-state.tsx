@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { LucideIcon } from 'lucide-react';
 
@@ -43,33 +44,27 @@ export function EmptyState({
     const IconComponent = icon;
 
     return (
-        <div className={cn('flex flex-col items-center justify-center p-8 text-center', className)}>
-            {/* Visual - Image or Icon */}
-            <div className="mb-1">
+        <Card className={cn('flex flex-col items-center justify-center text-center', className)}>
+            <CardHeader className="flex flex-col items-center justify-center gap-2 p-6">
+                {/* Visual - Image or Icon */}
                 {image ? (
                     <img src={image} alt={imageAlt} className={cn('object-contain', imageSize)} />
                 ) : IconComponent ? (
                     <IconComponent className={cn('text-muted-foreground', iconSize)} />
                 ) : null}
-            </div>
-
-            {/* Content */}
-            <div className="mb-6 max-w-md">
-                <h3 className="mb-2 text-lg font-semibold">{title}</h3>
-                <p className="text-muted-foreground text-sm">{description}</p>
-            </div>
-
-            {/* Actions */}
+                <CardTitle className="mt-2 text-lg font-semibold">{title}</CardTitle>
+                <CardDescription className="text-muted-foreground text-sm">{description}</CardDescription>
+            </CardHeader>
             {(primaryAction || secondaryAction) && (
-                <div className="flex gap-3">
+                <CardFooter className="flex gap-3 pb-6">
                     {primaryAction && <Button onClick={primaryAction.onClick}>{primaryAction.label}</Button>}
                     {secondaryAction && (
                         <Button variant="outline" onClick={secondaryAction.onClick}>
                             {secondaryAction.label}
                         </Button>
                     )}
-                </div>
+                </CardFooter>
             )}
-        </div>
+        </Card>
     );
 }

@@ -1,7 +1,7 @@
 <?php
 
-use App\Central\Http\Controllers\Access\AccessSelectionController;
-use App\Central\Http\Controllers\Access\BusinessSelectionController;
+use App\Auth\Http\Controllers\AccessSelectionController;
+use App\Auth\Http\Controllers\BusinessSelectionController;
 use Inertia\Inertia;
 
 

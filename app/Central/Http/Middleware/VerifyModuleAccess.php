@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Central\Http\Middleware;
 
 use App\Central\Models\Module;
@@ -15,10 +14,10 @@ class VerifyModuleAccess
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $user = Auth::user();
+        $user     = Auth::user();
         $business = $request->session()->get('active_business');
 
-        if (!$user || !$business) {
+        if (! $user || ! $business) {
             return redirect()->route('login');
         }
 
@@ -29,24 +28,24 @@ class VerifyModuleAccess
 
         // Get the module code from the route
         $moduleCode = $request->route()->parameter('module') ??
-            explode('.', $request->route()->getName())[1] ?? null;
+        explode('.', $request->route()->getName())[1] ?? null;
 
         // Verify this matches the active module in session
         $activeModuleCode = $request->session()->get('active_module_code');
 
-        if (!$moduleCode || $moduleCode !== $activeModuleCode) {
+        if (! $moduleCode || $moduleCode !== $activeModuleCode) {
             return redirect()->route('access.selection');
         }
 
         // Find the module
         $module = Module::where('code', $moduleCode)->first();
 
-        if (!$module) {
+        if (! $module) {
             return redirect()->route('access.selection');
         }
 
         // Check if user can access this module for the active business
-        if (!$user->canAccessModule($module->id, $business['id'])) {
+        if (! $user->canAccessModule($business, $module->code)) {
             return redirect()->route('access.selection');
         }
 

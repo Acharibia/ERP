@@ -1,12 +1,11 @@
 <?php
-
 namespace App\Central\Services;
 
+use App\Central\Enums\UserType;
+use App\Central\Models\Business;
 use App\Central\Models\Tenant;
 use App\Central\Models\User as CentralUser;
-use App\Tenant\Models\User as TenantUser;
-use App\Central\Models\Business;
-use App\Central\Enums\UserType;
+use App\Tenant\Core\Models\User as TenantUser;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -19,15 +18,12 @@ class UserService
     public function create(array $userData, UserType $userType): CentralUser
     {
         $user = CentralUser::create([
-            'global_id' => Str::uuid(),
-            'name' => $userData['name'],
-            'email' => $userData['email'],
-            'status' => $userData['status'] ?? 'active',
-            'password' => Hash::make($userData['password']),
-            'user_type' => $userType,
+            'global_id'         => Str::uuid(),
+            'name'              => $userData['name'],
+            'email'             => $userData['email'],
+            'status'            => $userData['status'] ?? 'active',
+            'password'          => Hash::make($userData['password']),
             'email_verified_at' => $userData['email_verified_at'] ?? null,
-            'reseller_id' => $userData['reseller_id'] ?? null,
-            'is_super_admin' => $userData['is_super_admin'] ?? false,
         ]);
 
         event(new Registered($user));
@@ -42,7 +38,7 @@ class UserService
     {
         $user = $this->create($userData, $userType);
 
-        if (!empty($businessIds)) {
+        if (! empty($businessIds)) {
             $this->syncToBusinesses($user, $businessIds);
         }
 
@@ -60,13 +56,12 @@ class UserService
         }
     }
 
-
     /**
      * Sync a user to a specific business
      */
     public function syncToBusiness(CentralUser $user, Business $business): void
     {
-        if (!$business->tenant_id || !$business->tenant) {
+        if (! $business->tenant_id || ! $business->tenant) {
             throw new \Exception("Business {$business->name} is missing a valid tenant.");
         }
 
@@ -86,11 +81,11 @@ class UserService
         return TenantUser::firstOrCreate(
             ['email' => $user->email],
             [
-                'global_id' => $user->global_id,
-                'name' => $user->name,
-                'password' => $user->password, // already hashed
+                'global_id'         => $user->global_id,
+                'name'              => $user->name,
+                'password'          => $user->password, // already hashed
                 'email_verified_at' => $user->email_verified_at,
-                'status' => 'active',
+                'status'            => 'active',
             ]
         );
     }
@@ -100,8 +95,9 @@ class UserService
      */
     public function removeFromBusiness(CentralUser $user, Business $business): void
     {
-        if (!$business->tenant_id || !$business->tenant)
+        if (! $business->tenant_id || ! $business->tenant) {
             return;
+        }
 
         // Remove from tenant DB
         TenantUser::where('global_id', $user->global_id)->delete();
@@ -137,7 +133,6 @@ class UserService
         return CentralUser::where('email', $email)->first();
     }
 
-
     /**
      * Delete user from all tenants and central DB
      */
@@ -165,14 +160,14 @@ class UserService
      */
     public function getUserRolesInBusiness(CentralUser $user, Business $business): array
     {
-        if (!$business->tenant_id || !$business->tenant)
+        if (! $business->tenant_id || ! $business->tenant) {
             return [];
+        }
 
         $tenantUser = TenantUser::where('global_id', $user->global_id)->first();
 
         return $tenantUser ? $tenantUser->getRoleNames()->toArray() : [];
     }
-
 
     /**
      * Update a user's role within a specific business
@@ -180,17 +175,17 @@ class UserService
     public function updateBusinessRole(CentralUser $user, $business, string $roleName): bool
     {
         $businessModel = $business instanceof Business
-            ? $business
-            : Business::findOrFail($business);
+        ? $business
+        : Business::findOrFail($business);
 
         $tenant = $businessModel->tenant;
 
-        if (!$tenant) {
+        if (! $tenant) {
             throw new \Exception("Business does not have an associated tenant");
         }
 
         // Check if user is synced with this business
-        if (!$user->tenants()->where('tenant_id', $tenant->id)->exists()) {
+        if (! $user->tenants()->where('tenant_id', $tenant->id)->exists()) {
             throw new \Exception("User is not associated with this business");
         }
 
@@ -200,7 +195,7 @@ class UserService
         // Find the user in the tenant database
         $tenantUser = TenantUser::where('global_id', $user->global_id)->first();
 
-        if (!$tenantUser) {
+        if (! $tenantUser) {
             tenancy()->end();
             return false;
         }

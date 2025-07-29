@@ -8,7 +8,7 @@ import { Combobox } from '@/components/ui/combobox';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Label } from '@/components/ui/label';
 import { Department, EmploymentStatus, EmploymentType, Position } from '@/types';
-import { EmployeeBasic, EmployeeEmploymentInfo, EmployeeEmploymentInfoForm } from '@/types/employee';
+import { EmployeeBasic, EmployeeEmploymentInfo, EmployeeEmploymentInfoForm } from '@/types/hr/employee';
 
 interface Props {
     onNext: () => void;

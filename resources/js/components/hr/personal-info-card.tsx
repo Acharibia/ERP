@@ -2,7 +2,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import InfoBlock from '@/components/ui/info-block';
 import { useDateFormatter } from '@/hooks/use-date-formatter';
-import { EmployeePersonalInfo } from '@/types/employee';
+import { EmployeePersonalInfo } from '@/types/hr/employee';
 
 type Props = {
     personal: EmployeePersonalInfo;

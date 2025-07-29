@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Support\Helpers;
 
 use App\Central\Models\Business;

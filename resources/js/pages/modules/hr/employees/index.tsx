@@ -30,6 +30,9 @@ export default function Index() {
             case 'edit':
                 router.visit(route('modules.hr.employees.edit', { id: row.id }));
                 break;
+            case 'access':
+                router.visit(route('modules.hr.employees.access', { id: row.id }));
+                break;
             case 'delete':
                 deleteDialogRef.current?.show(row);
                 break;

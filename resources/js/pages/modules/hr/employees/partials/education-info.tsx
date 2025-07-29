@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import type { Country, DegreeType, EmployeeEducationInfo } from '@/types';
-import { EmployeeEducationForm } from '@/types/employee';
+import { EmployeeEducationForm } from '@/types/hr/employee';
 import { router } from '@inertiajs/react';
 import { ChevronsLeft, ChevronsRight, GraduationCap, PlusCircle, Trash2 } from 'lucide-react';
 import { FormEventHandler, useState } from 'react';

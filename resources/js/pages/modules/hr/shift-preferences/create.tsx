@@ -8,7 +8,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import { Switch } from '@/components/ui/switch';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem, EmployeeBasic, ShiftBasic } from '@/types';
-import { daysOfWeek } from '@/types/shift-preference';
+import { daysOfWeek } from '@/types/hr/shift-preference';
 
 import { Head, router, useForm } from '@inertiajs/react';
 import { Save, X } from 'lucide-react';

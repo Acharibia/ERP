@@ -1,9 +1,8 @@
 <?php
-
 namespace Database\Seeders\Tenant;
 
-use Database\Seeders\Tenant\Module\Core\CoreSeeder;
-use Database\Seeders\Tenant\Module\HR\HRSeeder;
+use Database\Seeders\Tenant\Core\CoreSeeder;
+use Database\Seeders\Tenant\HR\HRSeeder;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder

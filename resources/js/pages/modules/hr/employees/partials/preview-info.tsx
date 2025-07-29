@@ -16,7 +16,7 @@ import type {
     EmployeePersonalInfoForm,
     EmployeeWorkExperienceForm,
     EmployeeWorkExperienceInfo,
-} from '@/types/employee';
+} from '@/types/hr/employee';
 import { router } from '@inertiajs/react';
 
 interface Props {

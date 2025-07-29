@@ -1,6 +1,6 @@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { EmployeeEmergencyContactInfo } from '@/types/employee';
+import { EmployeeEmergencyContactInfo } from '@/types/hr/employee';
 import InfoBlock from '../ui/info-block';
 
 type Props = {

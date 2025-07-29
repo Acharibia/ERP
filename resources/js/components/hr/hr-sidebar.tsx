@@ -11,20 +11,7 @@ import {
     SidebarRail,
 } from '@/components/ui/sidebar';
 import { Link } from '@inertiajs/react';
-import {
-    BarChart3,
-    BookOpen,
-    Building2,
-    Clock,
-    DollarSign,
-    FileText,
-    HelpCircle,
-    LayoutDashboard,
-    Medal,
-    Settings,
-    TrendingUp,
-    Users,
-} from 'lucide-react';
+import { BarChart3, BookOpen, Building2, Clock, FileText, HelpCircle, LayoutDashboard, Medal, Settings, TrendingUp, Users } from 'lucide-react';
 
 // HR navigation data
 const hrData = {
@@ -90,20 +77,36 @@ const hrData = {
             icon: BookOpen,
             items: [
                 {
-                    title: 'Training Programs',
-                    url: '/modules/hr/training/programs',
+                    title: 'Programs',
+                    url: '/modules/hr/programs',
                 },
                 {
-                    title: 'Certifications',
-                    url: '/modules/hr/training/certifications',
+                    title: 'Courses',
+                    url: '/modules/hr/courses',
+                },
+                {
+                    title: 'Trainers',
+                    url: '/modules/hr/training/trainers',
+                },
+                {
+                    title: 'Sessions',
+                    url: '/modules/hr/training/sessions',
+                },
+                {
+                    title: 'Assignments',
+                    url: '/modules/hr/training/assignments',
+                },
+                {
+                    title: 'Feedback',
+                    url: '/modules/hr/training/feedback',
                 },
                 {
                     title: 'Learning Paths',
                     url: '/modules/hr/training/learning-paths',
                 },
                 {
-                    title: 'Training Records',
-                    url: '/modules/hr/training/records',
+                    title: 'Certifications',
+                    url: '/modules/hr/training/certifications',
                 },
             ],
         },
@@ -122,6 +125,10 @@ const hrData = {
                     url: '/modules/hr/shifts',
                 },
                 {
+                    title: 'Shift Rotations',
+                    url: '/modules/hr/shift-rotations',
+                },
+                {
                     title: 'Schedules',
                     url: '/modules/hr/schedules',
                 },
@@ -132,13 +139,17 @@ const hrData = {
             ],
         },
         {
-            title: 'Payroll',
+            title: 'Access Control',
             url: '#',
-            icon: DollarSign,
+            icon: Settings,
             items: [
                 {
-                    title: 'Payroll Management',
-                    url: '/modules/hr/payroll',
+                    title: 'Roles & Permissions',
+                    url: '/modules/hr/role-access',
+                },
+                {
+                    title: 'Access Management',
+                    url: '/modules/hr/user-access',
                 },
             ],
         },

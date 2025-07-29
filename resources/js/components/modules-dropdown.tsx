@@ -8,7 +8,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { type Module, type PageProps } from '@/types';
+import { Module, PageProps } from '@/types';
 import { router, usePage } from '@inertiajs/react';
 import { Package } from 'lucide-react';
 

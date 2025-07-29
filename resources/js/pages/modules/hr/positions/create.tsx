@@ -173,7 +173,7 @@ export default function Create({ departments, employmentTypes, positionLevels }:
                                     placeholder="Select level"
                                     searchPlaceholder="Search..."
                                     emptyMessage="No levels found."
-                                    className={errors.position_level ? 'border-red-500' : ''}
+                                    className={errors.position_level ? '!border-red-500' : ''}
                                 />
                                 <InputError message={errors.position_level} />
                             </div>

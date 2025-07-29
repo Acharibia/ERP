@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Stepper, StepperDescription, StepperItem, StepperSeparator, StepperTitle, StepperTrigger } from '@/components/ui/stepper';
-import type { CreateEmployeeProps, EmployeeEmploymentInfoForm, EmployeeFormData, EmployeePersonalInfoForm } from '@/types/employee';
+import type { CreateEmployeeProps, EmployeeEmploymentInfoForm, EmployeeFormData, EmployeePersonalInfoForm } from '@/types/hr/employee';
 import { Briefcase, CheckCheck, ClipboardCheck, GraduationCap, PhoneCall, UserCircle } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';

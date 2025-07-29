@@ -1,22 +1,21 @@
 <?php
-
 namespace App\Central\Models;
 
+use App\Support\Helpers\TenantHelper;
+use App\Tenant\Core\Models\User as TenantUser;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\Permission\Traits\HasRoles;
 use Stancl\Tenancy\Database\Concerns\CentralConnection;
 use Stancl\Tenancy\Database\Models\TenantPivot;
-use Illuminate\Support\Str;
-use Spatie\MediaLibrary\HasMedia;
-use Spatie\MediaLibrary\InteractsWithMedia;
 
 class User extends Authenticatable implements HasMedia
 {
@@ -33,9 +32,6 @@ class User extends Authenticatable implements HasMedia
         'email',
         'password',
         'email_verified_at',
-        'user_type',
-        'is_super_admin',
-        'reseller_id',
         'status',
         'last_login_at',
         'last_login_ip',
@@ -58,11 +54,10 @@ class User extends Authenticatable implements HasMedia
      * @return array<string, string>
      */
     protected $casts = [
-        'email_verified_at' => 'datetime',
-        'password' => 'hashed',
-        'last_login_at' => 'datetime',
+        'email_verified_at'   => 'datetime',
+        'password'            => 'hashed',
+        'last_login_at'       => 'datetime',
         'password_changed_at' => 'datetime',
-        'is_super_admin' => 'boolean',
     ];
 
     public function getProfilePictureUrlAttribute(): ?string
@@ -80,30 +75,11 @@ class User extends Authenticatable implements HasMedia
     }
 
     /**
-     * Relationship to user profile
-     */
-    public function profile(): HasOne
-    {
-        return $this->hasOne(UserProfile::class);
-    }
-
-    /**
      * Get the businesses that belong to the user.
      */
     public function businesses(): BelongsToMany
     {
         return $this->belongsToMany(Business::class, 'user_businesses')
-            ->withPivot('is_primary', 'is_business_admin')
-            ->withTimestamps();
-    }
-
-    /**
-     * Get the primary business for this user
-     */
-    public function primaryBusiness(): BelongsToMany
-    {
-        return $this->belongsToMany(Business::class, 'user_businesses')
-            ->wherePivot('is_primary', true)
             ->withTimestamps();
     }
 
@@ -113,14 +89,6 @@ class User extends Authenticatable implements HasMedia
     public function userBusinesses(): HasMany
     {
         return $this->hasMany(UserBusiness::class);
-    }
-
-    /**
-     * Relationship to reseller (if this is a reseller user)
-     */
-    public function reseller(): BelongsTo
-    {
-        return $this->belongsTo(Reseller::class);
     }
 
     /**
@@ -144,7 +112,7 @@ class User extends Authenticatable implements HasMedia
      */
     public function isSystemAdmin(): bool
     {
-        return $this->user_type === 'system_admin' || $this->is_super_admin;
+        return $this->hasRole('system_admin', 'central');
     }
 
     /**
@@ -152,26 +120,7 @@ class User extends Authenticatable implements HasMedia
      */
     public function isReseller(): bool
     {
-        return $this->user_type === 'reseller' && $this->reseller_id !== null;
-    }
-
-    /**
-     * Check if the user is a business user
-     */
-    public function isBusinessUser(): bool
-    {
-        return $this->user_type === 'business_user';
-    }
-
-    /**
-     * Check if the user is an admin for a specific business
-     */
-    public function isBusinessAdmin(Business $business): bool
-    {
-        return $this->businesses()
-            ->wherePivot('business_id', $business->id)
-            ->wherePivot('is_business_admin', true)
-            ->exists();
+        return $this->hasRole('reseller', 'central');
     }
 
     /**
@@ -199,51 +148,8 @@ class User extends Authenticatable implements HasMedia
      */
     public function passwordNeedsChange(): bool
     {
-        return !$this->password_changed_at ||
-            $this->password_changed_at->addDays(90)->isPast();
-    }
-
-    /**
-     * Check if the user has reseller access.
-     */
-    public function hasResellerAccess(): bool
-    {
-        if ($this->user_type === 'reseller') {
-            return true;
-        }
-
-        if (!empty($this->reseller_id)) {
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * Check if the user has admin access.
-     */
-    public function hasAdminAccess(): bool
-    {
-        if ($this->is_super_admin) {
-            return true;
-        }
-
-        if ($this->user_type === 'system_admin') {
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * Check if user can access a specific module for a business.
-     */
-    public function canAccessModule(int $moduleId, int $businessId): bool
-    {
-        return $this->businesses()
-            ->where('businesses.id', $businessId)
-            ->wherePivot('is_business_admin', true)
-            ->exists();
+        return ! $this->password_changed_at ||
+        $this->password_changed_at->addDays(90)->isPast();
     }
 
     /**
@@ -252,6 +158,134 @@ class User extends Authenticatable implements HasMedia
     public function notifications(): HasMany
     {
         return $this->hasMany(UserNotification::class, 'user_id');
+    }
+
+    /**
+     * Create a user in both the central and tenant DBs.
+     *
+     * @param array $userData
+     * @param \App\Central\Models\Business $business
+     * @return self
+     */
+    public static function createInCentralAndTenant(array $userData, \App\Central\Models\Business $business): self
+    {
+        $centralUser = self::firstOrCreate(
+            ['email' => $userData['email']],
+            [
+                'name'              => $userData['name'],
+                'password'          => bcrypt($userData['password']),
+                'status'            => 'active',
+                'email_verified_at' => now(),
+            ]
+        );
+
+        if ($business->tenant) {
+            TenantHelper::runInTenantContext($business->tenant, function () use ($centralUser) {
+                TenantUser::firstOrCreate(
+                    ['email' => $centralUser->email],
+                    [
+                        'global_id'         => $centralUser->global_id,
+                        'name'              => $centralUser->name,
+                        'password'          => $centralUser->password, // already hashed
+                        'email_verified_at' => $centralUser->email_verified_at,
+                        'status'            => 'active',
+                    ]
+                );
+            });
+        }
+
+        return $centralUser;
+    }
+
+    /**
+     * Check if the user has admin access (system_admin or admin role).
+     */
+    public function hasAdminAccess(): bool
+    {
+        return $this->hasRole('system_admin', 'central') || $this->hasRole('admin', 'central');
+    }
+
+    /**
+     * Check if the user has reseller access (reseller role).
+     */
+    public function hasResellerAccess(): bool
+    {
+        return $this->hasRole('reseller', 'central');
+    }
+
+    /**
+     * Get the corresponding tenant user for a given business/tenant.
+     *
+     * @param \App\Central\Models\Business $business
+     * @return \App\Tenant\Core\Models\User|null
+     */
+    public function tenantUser(Business $business)
+    {
+        if (! $business->tenant) {
+            return null;
+        }
+        return TenantHelper::runInTenantContext($business->tenant, function () {
+            return TenantUser::where('global_id', $this->global_id)->first();
+        });
+    }
+
+    /**
+     * Get all tenant users for this central user across all tenants.
+     * This method returns a collection of tenant users from different tenants.
+     *
+     * @return \Illuminate\Support\Collection
+     */
+    public function getAllTenantUsers()
+    {
+        $tenantUsers = collect();
+
+        foreach ($this->tenants as $tenant) {
+            $tenantUser = TenantHelper::runInTenantContext($tenant, function () {
+                return TenantUser::where('global_id', $this->global_id)->first();
+            });
+
+            if ($tenantUser) {
+                $tenantUsers->push($tenantUser);
+            }
+        }
+
+        return $tenantUsers;
+    }
+
+    /**
+     * Check if the user is an admin for a specific business/tenant.
+     *
+     * @param Business $business
+     * @return bool
+     */
+    public function isBusinessAdmin(Business $business): bool
+    {
+        if (! $business->tenant) {
+            return false;
+        }
+        return TenantHelper::runInTenantContext($business->tenant, function () {
+            $tenantUser = TenantUser::where('global_id', $this->global_id)->first();
+            return $tenantUser ? ($tenantUser->hasRole('OWNER') || $tenantUser->hasRole('ADMINISTRATOR')) : false;
+        });
+    }
+
+    /**
+     * Check if the user can access a specific module in a business/tenant.
+     *
+     * @param Business $business
+     * @param string $moduleCode (e.g., 'core', 'hr')
+     * @return bool
+     */
+    public function canAccessModule(Business $business, string $moduleCode): bool
+    {
+        if (! $business->tenant) {
+            return false;
+        }
+        $permission = strtoupper($moduleCode) . '_ACCESS';
+        return TenantHelper::runInTenantContext($business->tenant, function () use ($permission) {
+            $tenantUser = TenantUser::where('global_id', $this->global_id)->first();
+            return $tenantUser ? $tenantUser->can($permission) : false;
+        });
     }
 
     /**

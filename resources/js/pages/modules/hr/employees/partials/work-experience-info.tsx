@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { PhoneInput } from '@/components/ui/phone-input';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { EmployeeWorkExperienceForm, EmployeeWorkExperienceInfo } from '@/types/employee';
+import { EmployeeWorkExperienceForm, EmployeeWorkExperienceInfo } from '@/types/hr/employee';
 import { router } from '@inertiajs/react';
 import { Briefcase, ChevronsLeft, ChevronsRight, PlusCircle, Trash2 } from 'lucide-react';
 import { FormEventHandler, useState } from 'react';

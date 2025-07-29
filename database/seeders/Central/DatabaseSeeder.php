@@ -1,7 +1,6 @@
 <?php
-
 namespace Database\Seeders\Central;
-use Database\Seeders\Central\AdminUserSeeder;
+
 use Database\Seeders\Central\BusinessSeeder;
 use Database\Seeders\Central\CountrySeeder;
 use Database\Seeders\Central\GenderSeeder;
@@ -28,12 +27,14 @@ class DatabaseSeeder extends Seeder
             GenderSeeder::class,
             TitleSeeder::class,
             IndustrySeeder::class,
+            PermissionSeeder::class,
+            RoleSeeder::class,
+            RolePermissionSeeder::class,
+            AdminSeeder::class,
             ResellerSeeder::class,
-            AdminUserSeeder::class,
             ModuleSeeder::class,
             PackageSeeder::class,
             BusinessSeeder::class,
-            PermissionSeeder::class,
             NotificationTemplatesSeeder::class,
         ]);
     }

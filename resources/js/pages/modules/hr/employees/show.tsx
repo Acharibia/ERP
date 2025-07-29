@@ -10,14 +10,15 @@ import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem, ShowEmployeeProps } from '@/types';
 import { Head, router } from '@inertiajs/react';
 import { Pencil } from 'lucide-react';
+import AccessControlInfo from './partials/access-control-info';
 
 export default function ShowEmployee({ initialEmployeeData }: ShowEmployeeProps) {
-    const { personal, employment, education, work_experience, emergency_contacts } = initialEmployeeData;
+    const { personal, employment, education, work_experience, emergency_contacts, user } = initialEmployeeData;
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: '/modules/hr/dashboard' },
         { title: 'Employees', href: '/modules/hr/employees' },
-        { title: personal?.name ?? 'Show', href: `/modules/hr/employees/show/${personal?.employee_id}` },
+        { title: personal?.name, href: `/modules/hr/employees/show/${personal?.employee_id}` },
     ];
 
     return (
@@ -42,6 +43,7 @@ export default function ShowEmployee({ initialEmployeeData }: ShowEmployeeProps)
                     <TabsTrigger value="education">Education</TabsTrigger>
                     <TabsTrigger value="experience">Work Experience</TabsTrigger>
                     <TabsTrigger value="emergency">Emergency Contacts</TabsTrigger>
+                    <TabsTrigger value="access">Access Control</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="personal">{personal && <PersonalInfoCard personal={personal} />}</TabsContent>
@@ -67,6 +69,14 @@ export default function ShowEmployee({ initialEmployeeData }: ShowEmployeeProps)
                         <EmergencyContactInfoCard emergency_contacts={emergency_contacts} />
                     </TabsContent>
                 )}
+
+                <TabsContent value="access">
+                    {user && <AccessControlInfo
+                        roles={Array.isArray(user?.roles) ? user.roles : []}
+                        permissions={Array.isArray(user?.permissions) ? user.permissions : []}
+                        personal={personal}
+                    />}
+                </TabsContent>
             </Tabs>
         </AppLayout>
     );

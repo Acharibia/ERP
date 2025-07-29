@@ -8,7 +8,7 @@ import { PhoneInput } from '@/components/ui/phone-input';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Country, State } from '@/types';
-import { EmployeeEmergencyContactForm, EmployeeEmergencyContactInfo } from '@/types/employee';
+import { EmployeeEmergencyContactForm, EmployeeEmergencyContactInfo } from '@/types/hr/employee';
 import { router } from '@inertiajs/react';
 import { ChevronsLeft, ChevronsRight, PhoneCall, PlusCircle, Trash2 } from 'lucide-react';
 import { FormEventHandler, useState } from 'react';
